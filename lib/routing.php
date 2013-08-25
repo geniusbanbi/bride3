@@ -61,7 +61,6 @@ class Routing{
         if( ! empty($current) && array_key_exists( $current , $prefixMap ) ){
             $prefix=$prefixMap[ $current ]['name'];
             array_shift($nodes);
-            echo 'exec';
             //記錄路徑前綴的全名
             $prefixFull = $current;
             
