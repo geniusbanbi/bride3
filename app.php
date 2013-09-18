@@ -28,7 +28,7 @@ define('BASEROOT', $BASEROOT );
 define('DIRLIB', BASEROOT.'lib'.DS );
 define('DIRPLUGIN', BASEROOT.'plugins'.DS );
 
-$WEBPLUGIN=dirname(WEBROOT).DS.'plugins'.DS;
+$WEBPLUGIN=dirname(WEBROOT).DS.'core'.DS.'plugins'.DS;
 if( $SINGLE_SITE_MODE ){
     $WEBPLUGIN = WEBROOT.'/core/plugins/';
 }
