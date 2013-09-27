@@ -504,6 +504,9 @@ class Model{
         $backtrace=debug_backtrace();
         $err=$backtrace[1];
         $_link=& APP::$mdb->_link[ APP::$mdb->_active_profile ];
+
+        if( mysql_errno($_link) == 0 ){ return; }
+        
         $msg ='<p style="font-size:15px;color:black;font-weight:normal;"><b>'.$err['file'].' Line '.$err['line'].'</b></p>';
         $msg.='<p style="font-size:13px;color:black;font-weight:normal;"><b>'.$err['class'].'::'.$err['function'].'() Complain:</p>';
         $msg.='<p style="font-size:13px;color:black;font-weight:bold;">Error: <span style="color:red;">'.$sql.'</span></p>';
