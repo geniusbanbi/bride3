@@ -141,7 +141,7 @@ $_default = array(
     'extra'=>array(),
     'footers'=>array(),
 );
-include( DIRCONFIG.'layouts.php' );
+include( DIRCONFIG.'layouts'.EXT );
 $_default = array_merge( $_default , APP::$layoutsConfigs['default'] );
 $prefix=APP::$routing['prefix'];
 View::$layoutConfigs = array_merge( $_default , APP::$layoutsConfigs[ $prefix ] );
@@ -169,7 +169,7 @@ include( '_shared_functions.php' );
 //載入網站專用自訂項目
 include( DIRROOT.'_global_functions.php' );
 //載入表單生成物件
-$_form_path = DIRROOT.'layout_'.APP::$prefix.'/form.php';
+$_form_path = DIRROOT.'layout_'.APP::$prefix.'/helper.form'.EXT;
 if( file_exists($_form_path) ){
     //如果自訂表單存在，載入自訂版本
     include( $_form_path );
@@ -180,13 +180,13 @@ if( file_exists($_form_path) ){
 
 //載入Controller
 //因為index.php已經檢查過，載入時不用再檢查
-$preload = DIRROOT.APP::$prefix.'.prefix.php';
+$preload = DIRROOT.APP::$prefix.'.prefix'.EXT;
 if( file_exists($preload) ){
     require( $preload );
 }
 
 //等同於載入 admin.prefix.php ，新的名稱格式為 _admin_functions.php
-$preload = DIRROOT.'_'.APP::$prefix.'_functions.php';
+$preload = DIRROOT.'_'.APP::$prefix.'_functions'.EXT;
 if( file_exists($preload) ){
     require( $preload );
 }else{
@@ -200,7 +200,7 @@ if( file_exists($preload) ){
 }
 
 
-require( DIRROOT.APP::$handler.'.php' );
+require( DIRROOT.APP::$handler.EXT );
 
 
 ?>

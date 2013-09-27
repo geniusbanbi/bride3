@@ -411,7 +411,7 @@ class Model{
     	if(count($where_list)<1){ errmsg('更新基準欄位 $identify (ex.id) 不能空白'); }
     	
     	$sql=sprintf("UPDATE ".$useTable." SET %s WHERE %s",implode(',',$fs), implode(' AND ',$where_list) );
-    	//echo $sql;die;
+    	//echo $sql.'<br>';
     	return Model::execute($sql);
     }
     function query($sql){
