@@ -526,6 +526,44 @@ class View{
     static $cacheLifeTime=-1; //render時的cache存活時間，-1時表示使用layout cache的預設值
     static $layoutConfigs=array(); //輸出頁面的設定資料
     
+    function render( $type, $name, $options=array() ){
+        //指定特定layout, ex. main: layout_main, admin: layout_admin，否則就是預設版型
+        $layout = APP::$prefix;
+        if( isset($options['layout']) && ! empty($options['layout']) ){
+            $layout = $options['layout'];
+            unset($options['layout']);
+        }
+        
+        //type: error, template, view
+        switch( $type ){
+            case 'error':
+                $path = 'layout_'.$layout.'/errors/'.$name.EXT;
+                $file = DIRROOT.$path;
+                if( ! file_exists($file) ){
+                    errmsg('您指定的錯誤呈現頁: '.$path.' 不存在');
+                }
+                include( $file );
+                break;
+            case 'template':
+                $path = 'layout_'.$layout.'/tpl_'.$name.EXT;
+                $file = DIRROOT.$path;
+                if( ! file_exists($file) ){
+                    errmsg('您指定的 Template: '.$path.' 不存在');
+                }
+                include( $file );
+                break;
+            case 'view':
+                $path = APP::$handler.'='.$name.EXT;
+                $file = DIRROOT.$path;
+                if( ! file_exists($file) ){
+                    errmsg('您指定的 View: '.$path.' 不存在');
+                }
+                include( $file );
+                break;
+            default:
+                errmsg('非預期的 type 參數，不知道該怎麼做');
+        }
+    }
     function setTitle( $pageTitle ){
         self::$layoutConfigs['title']=$pageTitle;
         return true;

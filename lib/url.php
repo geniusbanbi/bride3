@@ -276,6 +276,13 @@ function repos_url( $href ){
     
     return false;
 }
+function app_url( $app ){
+    //傳入app名稱，回傳該app的根路徑
+    if( ! array_key_exists( $app, RoutingConfigs::$maps ) ){
+        errmsg('指定的 app 尚未設定');
+    }
+    return '/'.RoutingConfigs::$maps[ $app ].'/';
+}
 function repos_path( $href ){
     //如果傳入的參數是字串，則以字串URL方式處理
     if( is_string($href) ){
