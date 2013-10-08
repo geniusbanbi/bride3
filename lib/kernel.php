@@ -9,6 +9,7 @@ class APP{
     /* Database */
     static $mdb; //資料庫操作元件
     static $modelClass=''; //Model的物件名稱
+    static $useModel=''; //Model的物件名稱，準備用來取代 $modelClass
     static $options=array(); //可隨程式需要自行放置資料
     
     /* Config */

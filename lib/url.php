@@ -48,6 +48,10 @@ function redirect( $href , $message='' , $message_template='' ){
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="Refresh" content='{$delay}; url={$url}'>
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
 </head>
 <body>
 <div style="width:100%;height:55%;background:url({$waitimg}) center bottom no-repeat;"></div>

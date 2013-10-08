@@ -6,7 +6,7 @@
  *
  * LICENSE:
  *
- * Copyright (c) 2006-2010, Alexey Borzov <avb@php.net>,
+ * Copyright (c) 2006-2012, Alexey Borzov <avb@php.net>,
  *                          Bertrand Mansion <golgote@mamasam.com>
  * All rights reserved.
  *
@@ -34,13 +34,13 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @license    http://opensource.org/licenses/bsd-license.php New BSD License
- * @version    SVN: $Id: InputHidden.php 294057 2010-01-26 21:10:28Z avb $
- * @link       http://pear.php.net/package/HTML_QuickForm2
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  SVN: $Id: InputHidden.php 325773 2012-05-22 14:45:59Z avb $
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 
 /**
@@ -51,11 +51,13 @@ require_once 'HTML/QuickForm2/Element/Input.php';
 /**
  * Class for <input type="hidden" /> elements
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @version    Release: 0.4.0
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  Release: 2.0.0
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 class HTML_QuickForm2_Element_InputHidden extends HTML_QuickForm2_Element_Input
 {
@@ -64,8 +66,9 @@ class HTML_QuickForm2_Element_InputHidden extends HTML_QuickForm2_Element_Input
    /**
     * Hidden elements can not be frozen
     *
-    * @param    bool    Whether element should be frozen or editable. This
-    *                   parameter is ignored in case of hidden elements
+    * @param bool $freeze Whether element should be frozen or editable. This
+    *                     parameter is ignored in case of hidden elements
+    *
     * @return   bool    Always returns false
     */
     public function toggleFrozen($freeze = null)
@@ -73,9 +76,28 @@ class HTML_QuickForm2_Element_InputHidden extends HTML_QuickForm2_Element_Input
         return false;
     }
 
+    /**
+     * Disallows setting an error message on hidden elements
+     *
+     * @param string|null $error
+     *
+     * @return HTML_QuickForm2_Element_InputHidden
+     * @throws HTML_QuickForm2_InvalidArgumentException if $error is not empty
+     */
+    public function setError($error = null)
+    {
+        if (strlen($error)) {
+            throw new HTML_QuickForm2_InvalidArgumentException(
+                "Hidden elements cannot have validation errors"
+            );
+        }
+        return parent::setError($error);
+    }
+
     public function render(HTML_QuickForm2_Renderer $renderer)
     {
         $renderer->renderHidden($this);
+        $this->renderClientRules($renderer->getJavascriptBuilder());
         return $renderer;
     }
 }

@@ -6,7 +6,7 @@
  *
  * LICENSE:
  *
- * Copyright (c) 2006-2010, Alexey Borzov <avb@php.net>,
+ * Copyright (c) 2006-2012, Alexey Borzov <avb@php.net>,
  *                          Bertrand Mansion <golgote@mamasam.com>
  * All rights reserved.
  *
@@ -34,13 +34,13 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @license    http://opensource.org/licenses/bsd-license.php New BSD License
- * @version    SVN: $Id: Callback.php 294057 2010-01-26 21:10:28Z avb $
- * @link       http://pear.php.net/package/HTML_QuickForm2
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  SVN: $Id: Callback.php 323363 2012-02-19 15:09:07Z avb $
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 
 /**
@@ -79,11 +79,13 @@ require_once 'HTML/QuickForm2/Rule.php';
  * $meta->addRule('in_array', 'Unknown variable name', array(array('foo', 'bar', 'baz')));
  * </code>
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @version    Release: 0.4.0
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  Release: 2.0.0
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 class HTML_QuickForm2_Rule_Callback extends HTML_QuickForm2_Rule
 {
@@ -101,6 +103,81 @@ class HTML_QuickForm2_Rule_Callback extends HTML_QuickForm2_Rule
         );
     }
 
+    protected function getJavascriptCallback()
+    {
+        HTML_QuickForm2_Loader::loadClass('HTML_QuickForm2_JavascriptBuilder');
+
+        $config    = $this->getConfig();
+        $arguments = array($this->owner->getJavascriptValue());
+        foreach ($config['arguments'] as $arg) {
+            $arguments[] = HTML_QuickForm2_JavascriptBuilder::encode($arg);
+        }
+        return "function() { return " . $this->findJavascriptName() .
+               "(" . implode(', ', $arguments) . "); }";
+    }
+
+   /**
+    * Finds a name for Javascript callback function
+    *
+    * The method first checks whether javascript callback 'js_callback' was
+    * provided to the Rule and returns that if found.
+    *
+    * If an explicit 'js_callback' was not provided, it tries to generate a name
+    * equal (for a given value of "equal") to PHP callback name. This may be useful
+    * if e.g. using HTML_AJAX package to generate class stubs in JS and in similar
+    * circumstances.
+    *
+    * If a callback does not have a name (it is a lambda function or a closure)
+    * then an exception will be raised.
+    *
+    * @return string
+    */
+    protected function findJavascriptName()
+    {
+        $config = $this->getConfig();
+
+        // oh joy! we have an explicitly given JS callback!
+        if (isset($config['js_callback'])) {
+            return $config['js_callback'];
+        }
+        // no luck, try to come up with a name similar to PHP one
+        // function name, filter lambdas created via create_function...
+        if (is_string($config['callback']) && chr(0) != $config['callback'][0]) {
+            return str_replace('::', '.', $config['callback']);
+        // object instance method
+        } elseif (is_array($config['callback']) && is_object($config['callback'][0])) {
+            return '(new ' . get_class($config['callback'][0]) . ').' . $config['callback'][1];
+        // static class method
+        } elseif (is_array($config['callback']) && is_string($config['callback'][0])) {
+            return $config['callback'][0] . '.' . $config['callback'][1];
+        // lambda, closure, whatever: no sane way to translate
+        } else {
+            throw new HTML_QuickForm2_InvalidArgumentException(
+                "Cannot generate Javascript callback name, please provide one"
+            );
+        }
+    }
+
+   /**
+    * Tests whether a given value is an array containing at least one of the given keys
+    *
+    * @param mixed $search if not an array, method will return false
+    * @param array $keys   keys to test for
+    *
+    * @return   bool
+    */
+    protected static function arrayHasSomeKeys($search, array $keys)
+    {
+        if (is_array($search)) {
+            foreach ($keys as $key) {
+                if (array_key_exists($key, $search)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
    /**
     * Merges local configuration with that provided for registerRule()
     *
@@ -108,19 +185,20 @@ class HTML_QuickForm2_Rule_Callback extends HTML_QuickForm2_Rule
     * {@link HTML_QuickForm2_Factory::registerRule()} in either of the
     * following formats
     *  - callback
-    *  - array(['callback' => callback, ]['arguments' => array(...)])
+    *  - array(['callback' => callback][, 'arguments' => array(...)][, 'js_callback' => string])
     *
     * "Local" configuration may be passed to the constructor in either of
     * the following formats
     *  - callback or arguments (interpretation depends on whether the global
     *    configuration already contains the callback)
-    *  - array(['callback' => callback, ]['arguments' => array(...)])
+    *  - array(['callback' => callback][, 'arguments' => array(...)][, 'js_callback' => string])
     *
     * As usual, global config overrides local one. It is a good idea to use the
     * associative array format to prevent ambiguity.
     *
-    * @param    mixed   Local configuration
-    * @param    mixed   Global configuration
+    * @param mixed $localConfig  Local configuration
+    * @param mixed $globalConfig Global configuration
+    *
     * @return   mixed   Merged configuration
     */
     public static function mergeConfig($localConfig, $globalConfig)
@@ -129,18 +207,14 @@ class HTML_QuickForm2_Rule_Callback extends HTML_QuickForm2_Rule
             $config = $localConfig;
 
         } else {
-            if (!is_array($globalConfig) ||
-                !isset($globalConfig['callback']) && !isset($globalConfig['arguments'])
-            ) {
+            if (!self::arrayHasSomeKeys($globalConfig, array('callback', 'arguments', 'js_callback'))) {
                 $config = array('callback' => $globalConfig);
             } else {
                 $config = $globalConfig;
             }
-            if (is_array($localConfig) && (isset($localConfig['callback'])
-                || isset($localConfig['arguments']))
-            ) {
+            if (self::arrayHasSomeKeys($localConfig, array('callback', 'arguments', 'js_callback'))) {
                 $config += $localConfig;
-            } elseif(isset($localConfig)) {
+            } elseif (isset($localConfig)) {
                 $config += array('callback' => $localConfig, 'arguments' => $localConfig);
             }
         }
@@ -150,10 +224,14 @@ class HTML_QuickForm2_Rule_Callback extends HTML_QuickForm2_Rule
    /**
     * Sets the callback to use for validation and its additional arguments
     *
-    * @param    callback|array  Callback or array ('callback' => validation callback,
-    *                                              'arguments' => additional arguments)
+    * @param callback|array $config Callback or array ('callback' => validation callback
+    *                                                  [, 'arguments' => additional arguments]
+    *                                                  [, 'js_callback' => javascript callback
+    *                                                               for client-side validation])
+    *
     * @return   HTML_QuickForm2_Rule
     * @throws   HTML_QuickForm2_InvalidArgumentException if callback is missing or invalid
+    *               or additional arguments is not an array
     */
     public function setConfig($config)
     {
@@ -164,6 +242,12 @@ class HTML_QuickForm2_Rule_Callback extends HTML_QuickForm2_Rule
             throw new HTML_QuickForm2_InvalidArgumentException(
                 'Callback Rule requires a valid callback, \'' . $callbackName .
                 '\' was given'
+            );
+        }
+        if (array_key_exists('arguments', $config) && !is_array($config['arguments'])) {
+            throw new HTML_QuickForm2_InvalidArgumentException(
+                'Callback Rule expects additional callback arguments to be an array, ' .
+                preg_replace('/\s+/', ' ', var_export($config['arguments'], true)) . ' given'
             );
         }
         return parent::setConfig($config + array('arguments' => array()));

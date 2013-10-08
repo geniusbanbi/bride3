@@ -6,7 +6,7 @@
  *
  * LICENSE:
  *
- * Copyright (c) 2006-2010, Alexey Borzov <avb@php.net>,
+ * Copyright (c) 2006-2012, Alexey Borzov <avb@php.net>,
  *                          Bertrand Mansion <golgote@mamasam.com>
  * All rights reserved.
  *
@@ -34,13 +34,13 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @license    http://opensource.org/licenses/bsd-license.php New BSD License
- * @version    SVN: $Id: Element.php 293661 2010-01-17 20:32:56Z avb $
- * @link       http://pear.php.net/package/HTML_QuickForm2
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  SVN: $Id: Element.php 323321 2012-02-18 10:48:48Z avb $
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 
 /**
@@ -51,11 +51,13 @@ require_once 'HTML/QuickForm2/Node.php';
 /**
  * Abstract base class for simple QuickForm2 elements (not Containers)
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @version    Release: 0.4.0
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  Release: 2.0.0
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 abstract class HTML_QuickForm2_Element extends HTML_QuickForm2_Node
 {
@@ -106,13 +108,60 @@ abstract class HTML_QuickForm2_Element extends HTML_QuickForm2_Node
    /**
     * Renders the element using the given renderer
     *
-    * @param    HTML_QuickForm2_Renderer    Renderer instance
+    * @param HTML_QuickForm2_Renderer $renderer
+    *
     * @return   HTML_QuickForm2_Renderer
     */
     public function render(HTML_QuickForm2_Renderer $renderer)
     {
         $renderer->renderElement($this);
+        $this->renderClientRules($renderer->getJavascriptBuilder());
         return $renderer;
+    }
+
+   /**
+    * Returns Javascript code for getting the element's value
+    *
+    * @param bool $inContainer Whether it should return a parameter
+    *                          for qf.form.getContainerValue()
+    *
+    * @return string
+    */
+    public function getJavascriptValue($inContainer = false)
+    {
+        return $inContainer? "'{$this->getId()}'": "qf.\$v('{$this->getId()}')";
+    }
+
+    public function getJavascriptTriggers()
+    {
+        return array($this->getId());
+    }
+
+    /**
+     * Applies recursive and non-recursive filters on element value
+     *
+     * @param mixed $value Element value
+     *
+     * @return   mixed   Filtered value
+     */
+    protected function applyFilters($value)
+    {
+        $recursive = $this->recursiveFilters;
+        $container = $this->getContainer();
+        while (!empty($container)) {
+            $recursive = array_merge($container->recursiveFilters, $recursive);
+            $container = $container->getContainer();
+        }
+        foreach ($recursive as $filter) {
+            if (is_array($value)) {
+                array_walk_recursive(
+                    $value, array('HTML_QuickForm2_Node', 'applyFilter'), $filter
+                );
+            } else {
+                self::applyFilter($value, null, $filter);
+            }
+        }
+        return parent::applyFilters($value);
     }
 }
 ?>

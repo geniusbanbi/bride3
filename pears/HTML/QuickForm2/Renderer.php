@@ -6,7 +6,7 @@
  *
  * LICENSE:
  *
- * Copyright (c) 2006-2010, Alexey Borzov <avb@php.net>,
+ * Copyright (c) 2006-2012, Alexey Borzov <avb@php.net>,
  *                          Bertrand Mansion <golgote@mamasam.com>
  * All rights reserved.
  *
@@ -34,13 +34,13 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @license    http://opensource.org/licenses/bsd-license.php New BSD License
- * @version    SVN: $Id: Renderer.php 294057 2010-01-26 21:10:28Z avb $
- * @link       http://pear.php.net/package/HTML_QuickForm2
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  SVN: $Id: Renderer.php 325209 2012-04-15 15:01:57Z avb $
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 
 /**
@@ -61,11 +61,13 @@ require_once 'HTML/QuickForm2/Loader.php';
  * Note that renderers should always be instantiated through factory(), in the
  * other case it will not be possible to add plugins.
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @version    Release: 0.4.0
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  Release: 2.0.0
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 abstract class HTML_QuickForm2_Renderer
 {
@@ -74,8 +76,10 @@ abstract class HTML_QuickForm2_Renderer
     * @var array
     */
     private static $_types = array(
-        'default' => array('HTML_QuickForm2_Renderer_Default', null),
-        'array'   => array('HTML_QuickForm2_Renderer_Array', null)
+        'callback' => array('HTML_QuickForm2_Renderer_Callback', null),
+        'default'  => array('HTML_QuickForm2_Renderer_Default', null),
+        'array'    => array('HTML_QuickForm2_Renderer_Array', null),
+        'stub'     => array('HTML_QuickForm2_Renderer_Stub', null)
     );
 
    /**
@@ -83,8 +87,10 @@ abstract class HTML_QuickForm2_Renderer
     * @var array
     */
     private static $_pluginClasses = array(
-        'default' => array(),
-        'array'   => array()
+        'callback' => array(),
+        'default'  => array(),
+        'array'    => array(),
+        'stub'     => array()
     );
 
    /**
@@ -101,6 +107,12 @@ abstract class HTML_QuickForm2_Renderer
     );
 
    /**
+    * Javascript builder object
+    * @var  HTML_QuickForm2_JavascriptBuilder
+    */
+    protected $jsBuilder;
+
+   /**
     * Creates a new renderer instance of the given type
     *
     * A renderer is always wrapped by a Proxy, which handles calling its
@@ -114,7 +126,8 @@ abstract class HTML_QuickForm2_Renderer
     * </code>
     * will work.
     *
-    * @param    string  Type name (treated case-insensitively)
+    * @param string $type Type name (treated case-insensitively)
+    *
     * @return   HTML_QuickForm2_Renderer_Proxy  A renderer instance of the given
     *                   type wrapped by a Proxy
     * @throws   HTML_QuickForm2_InvalidArgumentException If type name is unknown
@@ -139,19 +152,16 @@ abstract class HTML_QuickForm2_Renderer
    /**
     * Registers a new renderer type
     *
-    * @param    string  Type name (treated case-insensitively)
-    * @param    string  Class name
-    * @param    string  File containing the class, leave empty if class already loaded
+    * @param string $type        Type name (treated case-insensitively)
+    * @param string $className   Class name
+    * @param string $includeFile File containing the class, leave empty
+    *                            if class already loaded
+    *
     * @throws   HTML_QuickForm2_InvalidArgumentException if type already registered
     */
     final public static function register($type, $className, $includeFile = null)
     {
         $type = strtolower($type);
-        if (!empty(self::$_types[$type])) {
-            throw new HTML_QuickForm2_InvalidArgumentException(
-                "Renderer type '$type' is already registered"
-            );
-        }
         self::$_types[$type] = array($className, $includeFile);
         if (empty(self::$_pluginClasses[$type])) {
             self::$_pluginClasses[$type] = array();
@@ -161,9 +171,10 @@ abstract class HTML_QuickForm2_Renderer
    /**
     * Registers a plugin for a renderer type
     *
-    * @param    string  Renderer type name (treated case-insensitively)
-    * @param    string  Plugin class name
-    * @param    string  File containing the plugin class, leave empty if class already loaded
+    * @param string $type        Renderer type name (treated case-insensitively)
+    * @param string $className   Plugin class name
+    * @param string $includeFile File containing the plugin class, leave empty if class already loaded
+    *
     * @throws   HTML_QuickForm2_InvalidArgumentException if plugin is already registered
     */
     final public static function registerPlugin($type, $className, $includeFile = null)
@@ -208,6 +219,23 @@ abstract class HTML_QuickForm2_Renderer
     }
 
    /**
+    * Checks whether a method is available in this object
+    *
+    * @param string $name Method name
+    *
+    * @return bool
+    */
+    public function methodExists($name)
+    {
+        try {
+            $method = new ReflectionMethod($this, $name);
+            return $method->isPublic();
+        } catch (ReflectionException $e) {
+            return false;
+        }
+    }
+
+   /**
     * Sets the option(s) affecting renderer behaviour
     *
     * The following options are available:
@@ -222,8 +250,9 @@ abstract class HTML_QuickForm2_Renderer
     *                         elements (string)</li>
     * </ul>
     *
-    * @param    string|array    option name or array ('option name' => 'option value')
-    * @param    mixed           parameter value if $nameOrConfig is not an array
+    * @param string|array $nameOrOptions option name or array ('option name' => 'option value')
+    * @param mixed        $value         parameter value if $nameOrConfig is not an array
+    *
     * @return   HTML_QuickForm2_Renderer
     * @throws   HTML_QuickForm2_NotFoundException in case of unknown option
     */
@@ -249,7 +278,8 @@ abstract class HTML_QuickForm2_Renderer
    /**
     * Returns the value(s) of the renderer option(s)
     *
-    * @param    string  parameter name
+    * @param string $name parameter name
+    *
     * @return   mixed   value of $name parameter, array of all configuration
     *                   parameters if $name is not given
     * @throws   HTML_QuickForm2_NotFoundException in case of unknown option
@@ -267,58 +297,98 @@ abstract class HTML_QuickForm2_Renderer
     }
 
    /**
+    * Returns the javascript builder object
+    *
+    * @return   HTML_QuickForm2_JavascriptBuilder
+    */
+    public function getJavascriptBuilder()
+    {
+        if (empty($this->jsBuilder)) {
+            HTML_QuickForm2_Loader::loadClass('HTML_QuickForm2_JavascriptBuilder');
+            $this->jsBuilder = new HTML_QuickForm2_JavascriptBuilder();
+        }
+        return $this->jsBuilder;
+    }
+
+   /**
+    * Sets the javascript builder object
+    *
+    * You may want to reuse the same builder object if outputting several
+    * forms on one page.
+    *
+    * @param    HTML_QuickForm2_JavascriptBuilder $builder
+    *
+    * @return   HTML_QuickForm2_Renderer
+    */
+    public function setJavascriptBuilder(HTML_QuickForm2_JavascriptBuilder $builder = null)
+    {
+        $this->jsBuilder = $builder;
+        return $this;
+    }
+
+   /**
+    * Resets the accumulated data
+    *
+    * This method is called automatically by startForm() method, but should
+    * be called manually before calling other rendering methods separately.
+    *
+    * @return HTML_QuickForm2_Renderer
+    */
+    abstract public function reset();
+
+   /**
     * Renders a generic element
     *
-    * @param    HTML_QuickForm2_Node    Element being rendered
+    * @param HTML_QuickForm2_Node $element Element being rendered
     */
     abstract public function renderElement(HTML_QuickForm2_Node $element);
 
    /**
     * Renders a hidden element
     *
-    * @param    HTML_QuickForm2_Node    Hidden element being rendered
+    * @param HTML_QuickForm2_Node $element Hidden element being rendered
     */
     abstract public function renderHidden(HTML_QuickForm2_Node $element);
 
    /**
     * Starts rendering a form, called before processing contained elements
     *
-    * @param    HTML_QuickForm2_Node    Form being rendered
+    * @param HTML_QuickForm2_Node $form Form being rendered
     */
     abstract public function startForm(HTML_QuickForm2_Node $form);
 
    /**
     * Finishes rendering a form, called after processing contained elements
     *
-    * @param    HTML_QuickForm2_Node    Form being rendered
+    * @param HTML_QuickForm2_Node $form Form being rendered
     */
     abstract public function finishForm(HTML_QuickForm2_Node $form);
 
    /**
     * Starts rendering a generic container, called before processing contained elements
     *
-    * @param    HTML_QuickForm2_Node    Container being rendered
+    * @param HTML_QuickForm2_Node $container Container being rendered
     */
     abstract public function startContainer(HTML_QuickForm2_Node $container);
 
    /**
     * Finishes rendering a generic container, called after processing contained elements
     *
-    * @param    HTML_QuickForm2_Node    Container being rendered
+    * @param HTML_QuickForm2_Node $container Container being rendered
     */
     abstract public function finishContainer(HTML_QuickForm2_Node $container);
 
    /**
     * Starts rendering a group, called before processing grouped elements
     *
-    * @param    HTML_QuickForm2_Node    Group being rendered
+    * @param HTML_QuickForm2_Node $group Group being rendered
     */
     abstract public function startGroup(HTML_QuickForm2_Node $group);
 
    /**
     * Finishes rendering a group, called after processing grouped elements
     *
-    * @param    HTML_QuickForm2_Node    Group being rendered
+    * @param HTML_QuickForm2_Node $group Group being rendered
     */
     abstract public function finishGroup(HTML_QuickForm2_Node $group);
 }

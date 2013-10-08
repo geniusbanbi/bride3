@@ -6,7 +6,7 @@
  *
  * LICENSE:
  *
- * Copyright (c) 2006-2010, Alexey Borzov <avb@php.net>,
+ * Copyright (c) 2006-2012, Alexey Borzov <avb@php.net>,
  *                          Bertrand Mansion <golgote@mamasam.com>
  * All rights reserved.
  *
@@ -34,14 +34,14 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @author     Thomas Schulz <ths@4bconsult.de>
- * @license    http://opensource.org/licenses/bsd-license.php New BSD License
- * @version    SVN: $Id: Array.php 294052 2010-01-26 20:00:22Z avb $
- * @link       http://pear.php.net/package/HTML_QuickForm2
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @author   Thomas Schulz <ths@4bconsult.de>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  SVN: $Id: Array.php 325717 2012-05-16 13:00:13Z avb $
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 
 /**
@@ -64,6 +64,8 @@ require_once 'HTML/QuickForm2/Renderer.php';
  *   'required_note'    => note about the required elements (string),
  *   // if 'group_hiddens' option is true:
  *   'hidden'           => array with html of hidden elements (array),
+ *   // if form has some javascript for setup or validation:
+ *   'javascript'       => form javascript (string)
  *   // if 'group_errors' option is true:
  *   'errors' => array(
  *     '1st element id' => 'Error for the 1st element',
@@ -100,8 +102,10 @@ require_once 'HTML/QuickForm2/Renderer.php';
  *
  *   // if element is a Container
  *   'attributes' => container attributes (string)
+ *   // if element is a Group
+ *   'class'      => element's 'class' attribute
  *   // only for groups, if separator is set:
- *   'separator'  => separator for group elements (mixed),
+ *   'separator'  => separator for group elements (array),
  *   'elements'   => array(
  *     element_1,
  *     ...
@@ -115,16 +119,17 @@ require_once 'HTML/QuickForm2/Renderer.php';
  * exportMethods()) will be available to renderer plugins only.
  *
  * The following methods are published:
- *   - {@link reset()}
  *   - {@link toArray()}
  *   - {@link setStyleForId()}
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @author     Thomas Schulz <ths@4bconsult.de>
- * @version    Release: 0.4.0
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @author   Thomas Schulz <ths@4bconsult.de>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  Release: 2.0.0
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
 {
@@ -136,7 +141,7 @@ class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
 
    /**
     * Array with references to 'elements' fields of currently processed containers
-    * @var unknown_type
+    * @var array
     */
     public $containers = array();
 
@@ -163,7 +168,6 @@ class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
     protected function exportMethods()
     {
         return array(
-            'reset',
             'toArray',
             'setStyleForId'
         );
@@ -199,7 +203,8 @@ class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
    /**
     * Creates an array with fields that are common to all elements
     *
-    * @param    HTML_QuickForm2_Node    Element being rendered
+    * @param HTML_QuickForm2_Node $element Element being rendered
+    *
     * @return   array
     */
     public function buildCommonFields(HTML_QuickForm2_Node $element)
@@ -230,19 +235,28 @@ class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
         if (isset($this->styles[$ary['id']])) {
             $ary['style'] = $this->styles[$ary['id']];
         }
-        if (!$element instanceof HTML_QuickForm2_Container) {
-            $ary['html']       = $element->__toString();
-        } else {
-            $ary['elements']   = array();
-            $ary['attributes'] = $element->getAttributes(true);
-        }
         return $ary;
+    }
+
+    /**
+     * Creates an array with fields that are common to all Containers
+     *
+     * @param HTML_QuickForm2_Node $container Container being rendered
+     *
+     * @return array
+     */
+    public function buildCommonContainerFields(HTML_QuickForm2_Node $container)
+    {
+        return $this->buildCommonFields($container) + array(
+            'elements'   => array(),
+            'attributes' => $container->getAttributes(true)
+        );
     }
 
    /**
     * Stores an array representing "scalar" element in the form array
     *
-    * @param    array
+    * @param array $element
     */
     public function pushScalar(array $element)
     {
@@ -259,7 +273,7 @@ class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
    /**
     * Stores an array representing a Container in the form array
     *
-    * @param    array
+    * @param array $container
     */
     public function pushContainer(array $container)
     {
@@ -283,8 +297,9 @@ class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
     * "Style" is some information that is opaque to Array Renderer but may be
     * of use to e.g. template engine that receives the resultant array.
     *
-    * @param    string|array    Element id or array ('element id' => 'style')
-    * @param    sting           Element style if $idOrStyles is not an array
+    * @param string|array $idOrStyles Element id or array ('element id' => 'style')
+    * @param mixed        $style      Element style if $idOrStyles is not an array
+    *
     * @return   HTML_QuickForm2_Renderer_Array
     */
     public function setStyleForId($idOrStyles, $style = null)
@@ -303,6 +318,7 @@ class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
     public function renderElement(HTML_QuickForm2_Node $element)
     {
         $ary = $this->buildCommonFields($element) + array(
+            'html'     => $element->__toString(),
             'value'    => $element->getValue(),
             'type'     => $element->getType(),
             'required' => $element->isRequired(),
@@ -323,7 +339,7 @@ class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
     {
         $this->reset();
 
-        $this->array = $this->buildCommonFields($form);
+        $this->array = $this->buildCommonContainerFields($form);
         if ($this->options['group_errors']) {
             $this->array['errors'] = array();
         }
@@ -339,11 +355,12 @@ class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
         if ($this->hasRequired) {
             $this->array['required_note'] = $this->options['required_note'];
         }
+        $this->array['javascript'] = $this->getJavascriptBuilder()->getFormJavascript($form->getId());
     }
 
     public function startContainer(HTML_QuickForm2_Node $container)
     {
-        $ary = $this->buildCommonFields($container) + array(
+        $ary = $this->buildCommonContainerFields($container) + array(
             'required' => $container->isRequired(),
             'type'     => $container->getType()
         );
@@ -357,12 +374,20 @@ class HTML_QuickForm2_Renderer_Array extends HTML_QuickForm2_Renderer
 
     public function startGroup(HTML_QuickForm2_Node $group)
     {
-        $ary = $this->buildCommonFields($group) + array(
+        $ary = $this->buildCommonContainerFields($group) + array(
             'required' => $group->isRequired(),
-            'type'     => $group->getType()
+            'type'     => $group->getType(),
+            'class'    => $group->getAttribute('class')
         );
         if ($separator = $group->getSeparator()) {
-            $ary['separator'] = $separator;
+            $ary['separator'] = array();
+            for ($i = 0, $count = count($group); $i < $count - 1; $i++) {
+                if (!is_array($separator)) {
+                    $ary['separator'][] = (string)$separator;
+                } else {
+                    $ary['separator'][] = $separator[$i % count($separator)];
+                }
+            }
         }
         $this->pushContainer($ary);
     }

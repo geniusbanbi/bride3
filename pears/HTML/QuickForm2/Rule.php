@@ -6,7 +6,7 @@
  *
  * LICENSE:
  *
- * Copyright (c) 2006-2010, Alexey Borzov <avb@php.net>,
+ * Copyright (c) 2006-2012, Alexey Borzov <avb@php.net>,
  *                          Bertrand Mansion <golgote@mamasam.com>
  * All rights reserved.
  *
@@ -34,13 +34,13 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @license    http://opensource.org/licenses/bsd-license.php New BSD License
- * @version    SVN: $Id: Rule.php 293662 2010-01-17 20:38:37Z avb $
- * @link       http://pear.php.net/package/HTML_QuickForm2
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  SVN: $Id: Rule.php 325773 2012-05-22 14:45:59Z avb $
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 
 /**
@@ -49,14 +49,46 @@
  * This class provides methods that allow chaining several rules together.
  * Its validate() method executes the whole rule chain starting from this rule.
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @version    Release: 0.4.0
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  Release: 2.0.0
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 abstract class HTML_QuickForm2_Rule
 {
+   /**
+    * Constant showing that validation should be run server-side
+    * @see  HTML_QuickForm2_Node::addRule()
+    */
+    const SERVER = 1;
+
+   /**
+    * Constant showing that validation should be run client-side (on form submit)
+    * @see  HTML_QuickForm2_Node::addRule()
+    */
+    const CLIENT = 2;
+
+   /**
+    * Constant showing that validation should be run client-side (on form submit and on leaving the field)
+    * @see  HTML_QuickForm2_Node::addRule()
+    */
+    const ONBLUR_CLIENT = 6;
+
+   /**
+    * A combination of SERVER and CLIENT constants
+    * @see  HTML_QuickForm2_Node::addRule()
+    */
+    const CLIENT_SERVER = 3;
+
+   /**
+    * A combination of SERVER and ONBLUR_CLIENT constants
+    * @see  HTML_QuickForm2_Node::addRule()
+    */
+    const ONBLUR_CLIENT_SERVER = 7;
+
    /**
     * An element whose value will be validated by this rule
     * @var  HTML_QuickForm2_Node
@@ -76,7 +108,7 @@ abstract class HTML_QuickForm2_Rule
     protected $config;
 
    /**
-    * Rules chained to this via "and" and "or" operators
+    * Rules chained to this one via "and" and "or" operators
     *
     * The contents can be described as "disjunctive normal form", where an outer
     * array represents a disjunction of conjunctive clauses represented by inner
@@ -90,9 +122,9 @@ abstract class HTML_QuickForm2_Rule
    /**
     * Class constructor
     *
-    * @param    HTML_QuickForm2_Node    Element to validate
-    * @param    string                  Error message to display if validation fails
-    * @param    mixed                   Configuration data for the rule
+    * @param HTML_QuickForm2_Node $owner   Element to validate
+    * @param string               $message Error message to display if validation fails
+    * @param mixed                $config  Configuration data for the rule
     */
     public function __construct(HTML_QuickForm2_Node $owner, $message = '', $config = null)
     {
@@ -107,8 +139,9 @@ abstract class HTML_QuickForm2_Rule
     * Default behaviour is for global config to override local one, different
     * Rules may implement more complex merging behaviours.
     *
-    * @param    mixed   Local configuration
-    * @param    mixed   Global configuration, usually provided to {@link HTML_QuickForm2_Factory::registerRule()}
+    * @param mixed $localConfig  Local configuration
+    * @param mixed $globalConfig Global configuration, usually provided to {@link HTML_QuickForm2_Factory::registerRule()}
+    *
     * @return   mixed   Merged configuration
     */
     public static function mergeConfig($localConfig, $globalConfig)
@@ -119,7 +152,8 @@ abstract class HTML_QuickForm2_Rule
    /**
     * Sets configuration data for the rule
     *
-    * @param    mixed   Rule configuration data (specific for a Rule)
+    * @param mixed $config Rule configuration data (specific for a Rule)
+    *
     * @return   HTML_QuickForm2_Rule
     * @throws   HTML_QuickForm2_InvalidArgumentException    in case of invalid
     *               configuration data
@@ -143,11 +177,22 @@ abstract class HTML_QuickForm2_Rule
    /**
     * Sets the error message output by the rule
     *
-    * @param    string                  Error message to display if validation fails
+    * @param string $message Error message to display if validation fails
+    *
     * @return   HTML_QuickForm2_Rule
+    * @throws HTML_QuickForm2_InvalidArgumentException if trying to validate
+    *       HTML_QuickForm2_Element_InputHidden with a non-empty error message
+    *       (e.g. not in Rule chain)
     */
     public function setMessage($message)
     {
+        if ($this->owner instanceof HTML_QuickForm2_Element_InputHidden
+            && strlen($message)
+        ) {
+            throw new HTML_QuickForm2_InvalidArgumentException(
+                "Hidden elements cannot have validation errors"
+            );
+        }
         $this->message = (string)$message;
         return $this;
     }
@@ -165,10 +210,30 @@ abstract class HTML_QuickForm2_Rule
    /**
     * Sets the element that will be validated by this rule
     *
-    * @param    HTML_QuickForm2_Node    Element to validate
+    * @param HTML_QuickForm2_Node $owner Element to validate
+    *
+    * @throws   HTML_QuickForm2_InvalidArgumentException    if trying to set
+    *       an instance of HTML_QuickForm2_Element_Static as rule owner; if
+    *       trying to validate HTML_QuickForm2_Element_InputHidden with a
+    *       non-empty error message (e.g. not in Rule chain)
     */
     public function setOwner(HTML_QuickForm2_Node $owner)
     {
+        // Very little sense to validate static elements as they're, well, static.
+        // If someone comes up with a validation rule for these, he can override
+        // setOwner() there...
+        if ($owner instanceof HTML_QuickForm2_Element_Static) {
+            throw new HTML_QuickForm2_InvalidArgumentException(
+                get_class($this) . ' cannot validate Static elements'
+            );
+        }
+        if ($owner instanceof HTML_QuickForm2_Element_InputHidden
+            && strlen($this->getMessage())
+        ) {
+            throw new HTML_QuickForm2_InvalidArgumentException(
+                "Hidden elements cannot have validation errors"
+            );
+        }
         if (null !== $this->owner) {
             $this->owner->removeRule($this);
         }
@@ -182,7 +247,8 @@ abstract class HTML_QuickForm2_Rule
     * previous one returns false. The method is named this way because "and" is
     * a reserved word in PHP.
     *
-    * @param    HTML_QuickForm2_Rule
+    * @param HTML_QuickForm2_Rule $next
+    *
     * @return   HTML_QuickForm2_Rule    first rule in the chain (i.e. $this)
     * @throws   HTML_QuickForm2_InvalidArgumentException    when trying to add
     *           a "required" rule to the chain
@@ -205,7 +271,8 @@ abstract class HTML_QuickForm2_Rule
     * previous one returns true. The method is named this way because "or" is
     * a reserved word in PHP.
     *
-    * @param    HTML_QuickForm2_Rule
+    * @param HTML_QuickForm2_Rule $next
+    *
     * @return   HTML_QuickForm2_Rule    first rule in the chain (i.e. $this)
     * @throws   HTML_QuickForm2_InvalidArgumentException    when trying to add
     *           a "required" rule to the chain
@@ -234,6 +301,7 @@ abstract class HTML_QuickForm2_Rule
         $globalValid = false;
         $localValid  = $this->validateOwner();
         foreach ($this->chainedRules as $item) {
+            /* @var $multiplier HTML_QuickForm2_Rule */
             foreach ($item as $multiplier) {
                 if (!($localValid = $localValid && $multiplier->validate())) {
                     break;
@@ -252,14 +320,8 @@ abstract class HTML_QuickForm2_Rule
     * Validates the owner element
     *
     * @return   bool    Whether owner element is valid according to the rule
-    * @todo This should be declared abstract after release 0.4.0
     */
-    protected function validateOwner()
-    {
-        $level = defined('E_USER_DEPRECATED')? E_USER_DEPRECATED: E_USER_NOTICE;
-        trigger_error(get_class($this) . '::checkValue() is deprecated, implement validateOwner() instead', $level);
-        return $this->checkValue($this->owner->getValue());
-    }
+    abstract protected function validateOwner();
 
    /**
     * Sets the error message on the owner element
@@ -269,6 +331,101 @@ abstract class HTML_QuickForm2_Rule
         if (strlen($this->getMessage()) && !$this->owner->getError()) {
             $this->owner->setError($this->getMessage());
         }
+    }
+
+   /**
+    * Returns the client-side validation callback
+    *
+    * This essentially builds a Javascript version of validateOwner() method,
+    * with element ID and Rule configuration hardcoded.
+    *
+    * @return   string    Javascript function to validate the element's value
+    * @throws   HTML_QuickForm2_Exception   if Rule can only be run server-side
+    */
+    protected function getJavascriptCallback()
+    {
+        throw new HTML_QuickForm2_Exception(
+            get_class($this) . ' does not implement javascript validation'
+        );
+    }
+
+   /**
+    * Returns IDs of form fields that should trigger "live" Javascript validation
+    *
+    * This returns IDs that are linked to the rule itself.
+    *
+    * @return array
+    */
+    protected function getOwnJavascriptTriggers()
+    {
+        return $this->owner->getJavascriptTriggers();
+    }
+
+   /**
+    * Returns IDs of form fields that should trigger "live" Javascript validation
+    *
+    * This returns IDs that are linked to the rule itself and its chained
+    * rules. Live validation will be be triggered by 'blur' or 'change' event
+    * on any of the elements whose IDs are returned by this method.
+    *
+    * @return array
+    */
+    protected function getJavascriptTriggers()
+    {
+        $triggers = array_flip($this->getOwnJavascriptTriggers());
+        foreach ($this->chainedRules as $item) {
+            /* @var $multiplier HTML_QuickForm2_Rule */
+            foreach ($item as $multiplier) {
+                foreach ($multiplier->getJavascriptTriggers() as $trigger) {
+                    $triggers[$trigger] = true;
+                }
+            }
+        }
+        return array_keys($triggers);
+    }
+
+   /**
+    * Returns the client-side representation of the Rule
+    *
+    * This creates an instance of either qf.Rule or qf.LiveRule (depends on
+    * $outputTriggers) with initialization parameters:
+    *  - callback: {@see getJavascriptCallback()}
+    *  - element ID to set error for if validation fails
+    *  - error message to set if validation fails
+    *  - triggers: {@see getJavascriptTriggers()} (only for
+    *    qf.LiveRule when $outputTriggers is true)
+    *  - chained rules, array of arrays like in $chainedRules property
+    *
+    * @param bool $outputTriggers Whether the Rule will be run onblur / onchange
+    *
+    * @return   string
+    * @throws   HTML_QuickForm2_Exception   if Rule or its chained Rules can only
+    *                                       be run server-side
+    */
+    public function getJavascript($outputTriggers = true)
+    {
+        HTML_QuickForm2_Loader::loadClass('HTML_QuickForm2_JavascriptBuilder');
+
+        $js = $this->getJavascriptCallback() . ",\n\t'" . $this->owner->getId()
+              . "', " . HTML_QuickForm2_JavascriptBuilder::encode($this->getMessage());
+
+        $js = $outputTriggers && count($triggers = $this->getJavascriptTriggers())
+              ? 'new qf.LiveRule(' . $js . ', ' . HTML_QuickForm2_JavascriptBuilder::encode($triggers)
+              : 'new qf.Rule(' . $js;
+
+        if (count($this->chainedRules) > 1 || count($this->chainedRules[0]) > 0) {
+            $chained = array();
+            foreach ($this->chainedRules as $item) {
+                $multipliers = array();
+                /* @var $multiplier HTML_QuickForm2_Rule */
+                foreach ($item as $multiplier) {
+                    $multipliers[] = $multiplier->getJavascript(false);
+                }
+                $chained[] = '[' . implode(",\n", $multipliers) . ']';
+            }
+            $js .= ",\n\t [" . implode(",\n", $chained) . "]";
+        }
+        return $js . ')';
     }
 }
 ?>

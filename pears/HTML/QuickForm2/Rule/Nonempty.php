@@ -6,7 +6,7 @@
  *
  * LICENSE:
  *
- * Copyright (c) 2006-2010, Alexey Borzov <avb@php.net>,
+ * Copyright (c) 2006-2012, Alexey Borzov <avb@php.net>,
  *                          Bertrand Mansion <golgote@mamasam.com>
  * All rights reserved.
  *
@@ -34,13 +34,13 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @license    http://opensource.org/licenses/bsd-license.php New BSD License
- * @version    SVN: $Id: Nonempty.php 294057 2010-01-26 21:10:28Z avb $
- * @link       http://pear.php.net/package/HTML_QuickForm2
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  SVN: $Id: Nonempty.php 323363 2012-02-19 15:09:07Z avb $
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 
 /**
@@ -66,11 +66,13 @@ require_once 'HTML/QuickForm2/Rule.php';
  * $multiSelect->addRule('required', 'Please select at least two options', 2);
  * </code>
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @version    Release: 0.4.0
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  Release: 2.0.0
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 class HTML_QuickForm2_Rule_Nonempty extends HTML_QuickForm2_Rule
 {
@@ -105,9 +107,10 @@ class HTML_QuickForm2_Rule_Nonempty extends HTML_QuickForm2_Rule
     * considered not empty if at least one option is selected, Container will
     * be considered not empty if at least one contained element is not empty.
     *
-    * @param    int     Maximum allowed size
+    * @param int $config Minimum number of nonempty values
+    *
     * @return   HTML_QuickForm2_Rule
-    * @throws   HTML_QuickForm2_InvalidArgumentException    if a bogus size limit was provided
+    * @throws   HTML_QuickForm2_InvalidArgumentException    if a bogus limit was provided
     */
     public function setConfig($config)
     {
@@ -121,6 +124,11 @@ class HTML_QuickForm2_Rule_Nonempty extends HTML_QuickForm2_Rule
         }
         return parent::setConfig(intval($config));
     }
-}
 
+    protected function getJavascriptCallback()
+    {
+        return "function() { return qf.rules.nonempty(" . $this->owner->getJavascriptValue()
+               . ", " . $this->getConfig() . "); }";
+    }
+}
 ?>

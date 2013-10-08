@@ -6,7 +6,7 @@
  *
  * LICENSE:
  *
- * Copyright (c) 2006-2010, Alexey Borzov <avb@php.net>,
+ * Copyright (c) 2006-2012, Alexey Borzov <avb@php.net>,
  *                          Bertrand Mansion <golgote@mamasam.com>
  * All rights reserved.
  *
@@ -34,13 +34,13 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @license    http://opensource.org/licenses/bsd-license.php New BSD License
- * @version    SVN: $Id: InputFile.php 294057 2010-01-26 21:10:28Z avb $
- * @link       http://pear.php.net/package/HTML_QuickForm2
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  SVN: $Id: InputFile.php 323363 2012-02-19 15:09:07Z avb $
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 
 /**
@@ -51,55 +51,21 @@ require_once 'HTML/QuickForm2/Element/Input.php';
 /**
  * Class for <input type="file" /> elements
  *
- * @category   HTML
- * @package    HTML_QuickForm2
- * @author     Alexey Borzov <avb@php.net>
- * @author     Bertrand Mansion <golgote@mamasam.com>
- * @version    Release: 0.4.0
+ * @category HTML
+ * @package  HTML_QuickForm2
+ * @author   Alexey Borzov <avb@php.net>
+ * @author   Bertrand Mansion <golgote@mamasam.com>
+ * @license  http://opensource.org/licenses/bsd-license.php New BSD License
+ * @version  Release: 2.0.0
+ * @link     http://pear.php.net/package/HTML_QuickForm2
  */
 class HTML_QuickForm2_Element_InputFile extends HTML_QuickForm2_Element_Input
 {
    /**
-    * Default language for error messages
-    */
-    const DEFAULT_LANGUAGE = 'en';
-
-   /**
-    * Localized error messages for PHP's file upload errors
-    * @var  array
-    */
-    protected $errorMessages = array(
-        'en' => array(
-            UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds size permitted by PHP configuration (%d bytes)',
-            UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive in HTML form (%d bytes)',
-            UPLOAD_ERR_PARTIAL    => 'The file was only partially uploaded',
-            UPLOAD_ERR_NO_TMP_DIR => 'Server error: temporary directory is missing',
-            UPLOAD_ERR_CANT_WRITE => 'Server error: failed to write the file to disk',
-            UPLOAD_ERR_EXTENSION  => 'File upload was stopped by extension'
-        ),
-        'fr' => array(
-            UPLOAD_ERR_INI_SIZE   => 'Le fichier envoy&eacute; exc&egrave;de la taille autoris&eacute;e par la configuration de PHP (%d octets)',
-            UPLOAD_ERR_FORM_SIZE  => 'Le fichier envoy&eacute; exc&egrave;de la taille de MAX_FILE_SIZE sp&eacute;cifi&eacute;e dans le formulaire HTML (%d octets)',
-            UPLOAD_ERR_PARTIAL    => 'Le fichier n\'a &eacute;t&eacute; que partiellement t&eacute;l&eacute;charg&eacute;',
-            UPLOAD_ERR_NO_TMP_DIR => 'Erreur serveur: le r&eacute;pertoire temporaire est manquant',
-            UPLOAD_ERR_CANT_WRITE => 'Erreur serveur: &eacute;chec de l\'&eacute;criture du fichier sur le disque',
-            UPLOAD_ERR_EXTENSION  => 'L\'envoi de fichier est arr&ecirc;t&eacute; par l\'extension'
-        ),
-        'ru' => array(
-            UPLOAD_ERR_INI_SIZE   => '&#x420;&#x430;&#x437;&#x43c;&#x435;&#x440; &#x437;&#x430;&#x433;&#x440;&#x443;&#x436;&#x435;&#x43d;&#x43d;&#x43e;&#x433;&#x43e; &#x444;&#x430;&#x439;&#x43b;&#x430; &#x43f;&#x440;&#x435;&#x432;&#x43e;&#x441;&#x445;&#x43e;&#x434;&#x438;&#x442; &#x43c;&#x430;&#x43a;&#x441;&#x438;&#x43c;&#x430;&#x43b;&#x44c;&#x43d;&#x43e; &#x440;&#x430;&#x437;&#x440;&#x435;&#x448;&#x451;&#x43d;&#x43d;&#x44b;&#x439; &#x43d;&#x430;&#x441;&#x442;&#x440;&#x43e;&#x439;&#x43a;&#x430;&#x43c;&#x438; PHP (%d &#x431;&#x430;&#x439;&#x442;)',
-            UPLOAD_ERR_FORM_SIZE  => '&#x420;&#x430;&#x437;&#x43c;&#x435;&#x440; &#x437;&#x430;&#x433;&#x440;&#x443;&#x436;&#x435;&#x43d;&#x43d;&#x43e;&#x433;&#x43e; &#x444;&#x430;&#x439;&#x43b;&#x430; &#x43f;&#x440;&#x435;&#x432;&#x43e;&#x441;&#x445;&#x43e;&#x434;&#x438;&#x442; &#x434;&#x438;&#x440;&#x435;&#x43a;&#x442;&#x438;&#x432;&#x443; MAX_FILE_SIZE, &#x443;&#x43a;&#x430;&#x437;&#x430;&#x43d;&#x43d;&#x443;&#x44e; &#x432; &#x444;&#x43e;&#x440;&#x43c;&#x435; (%d &#x431;&#x430;&#x439;&#x442;)',
-            UPLOAD_ERR_PARTIAL    => '&#x424;&#x430;&#x439;&#x43b; &#x431;&#x44b;&#x43b; &#x437;&#x430;&#x433;&#x440;&#x443;&#x436;&#x435;&#x43d; &#x43d;&#x435; &#x43f;&#x43e;&#x43b;&#x43d;&#x43e;&#x441;&#x442;&#x44c;&#x44e;',
-            UPLOAD_ERR_NO_TMP_DIR => '&#x41e;&#x448;&#x438;&#x431;&#x43a;&#x430; &#x43d;&#x430; &#x441;&#x435;&#x440;&#x432;&#x435;&#x440;&#x435;: &#x43e;&#x442;&#x441;&#x443;&#x442;&#x441;&#x442;&#x432;&#x443;&#x435;&#x442; &#x43a;&#x430;&#x442;&#x430;&#x43b;&#x43e;&#x433; &#x434;&#x43b;&#x44f; &#x432;&#x440;&#x435;&#x43c;&#x435;&#x43d;&#x43d;&#x44b;&#x445; &#x444;&#x430;&#x439;&#x43b;&#x43e;&#x432;',
-            UPLOAD_ERR_CANT_WRITE => '&#x41e;&#x448;&#x438;&#x431;&#x43a;&#x430; &#x43d;&#x430; &#x441;&#x435;&#x440;&#x432;&#x435;&#x440;&#x435;: &#x43d;&#x435; &#x443;&#x434;&#x430;&#x43b;&#x43e;&#x441;&#x44c; &#x437;&#x430;&#x43f;&#x438;&#x441;&#x430;&#x442;&#x44c; &#x444;&#x430;&#x439;&#x43b; &#x43d;&#x430; &#x434;&#x438;&#x441;&#x43a;',
-            UPLOAD_ERR_EXTENSION  => '&#x417;&#x430;&#x433;&#x440;&#x443;&#x437;&#x43a;&#x430; &#x444;&#x430;&#x439;&#x43b;&#x430; &#x431;&#x44b;&#x43b;&#x430; &#x43e;&#x441;&#x442;&#x430;&#x43d;&#x43e;&#x432;&#x43b;&#x435;&#x43d;&#x430; &#x440;&#x430;&#x441;&#x448;&#x438;&#x440;&#x435;&#x43d;&#x438;&#x435;&#x43c;'
-        )
-    );
-
-   /**
     * Language to display error messages in
     * @var  string
     */
-    protected $language;
+    protected $language = null;
 
    /**
     * Information on uploaded file, from submit data source
@@ -109,54 +75,48 @@ class HTML_QuickForm2_Element_InputFile extends HTML_QuickForm2_Element_Input
 
     protected $attributes = array('type' => 'file');
 
+   /**
+    * Message provider for upload error messages
+    * @var  callback|HTML_QuickForm2_MessageProvider
+    */
+    protected $messageProvider;
 
    /**
     * Class constructor
     *
     * Possible keys in $data array are:
-    *  - 'language': language to display error messages in, it should either be
-    *    already available in the class or provided in 'errorMessages'
-    *  - 'errorMessages': an array of error messages with the following format
-    *    <pre>
-    *      'language code 1' => array(
-    *         UPLOAD_ERR_... => 'message',
-    *         ...
-    *         UPLOAD_ERR_... => 'message'
-    *      ),
-    *      ...
-    *      'language code N' => array(
-    *         ...
-    *      )
-    *    </pre>
-    *    Note that error messages for UPLOAD_ERR_INI_SIZE and UPLOAD_ERR_FORM_SIZE
-    *    may contain '%d' placeholders that will be automatically replaced by the
-    *    appropriate size limits. Note also that you don't need to provide messages
-    *    for every possible error code in the arrays, you may e.g. override just
-    *    one error message for a particular language.
+    *  - 'messageProvider': an instance of a class implementing
+    *    HTML_QuickForm2_MessageProvider interface, this will be used to get
+    *    localized error messages. Default will be used if not given.
+    *  - 'language': language to display error messages in, will be passed to
+    *    message provider.
     *
-    * @param    string  Element name
-    * @param    mixed   Attributes (either a string or an array)
-    * @param    array   Data used to set up error messages for PHP's file
-    *                   upload errors.
+    * @param string       $name       Element name
+    * @param string|array $attributes Attributes (either a string or an array)
+    * @param array        $data       Data used to set up error messages for PHP's
+    *                                 file upload errors.
     */
     public function __construct($name = null, $attributes = null, array $data = array())
     {
-        if (isset($data['errorMessages'])) {
-            // neither array_merge() nor array_merge_recursive will do
-            foreach ($data['errorMessages'] as $lang => $ary) {
-                foreach ($ary as $code => $message) {
-                    $this->errorMessages[$lang][$code] = $message;
-                }
+        if (isset($data['messageProvider'])) {
+            if (!is_callable($data['messageProvider'])
+                && !$data['messageProvider'] instanceof HTML_QuickForm2_MessageProvider
+            ) {
+                throw new HTML_QuickForm2_InvalidArgumentException(
+                    "messageProvider: expecting a callback or an implementation"
+                    . " of HTML_QuickForm2_MessageProvider"
+                );
             }
-            unset($data['errorMessages']);
-        }
-        if (!isset($data['language'])) {
-            $this->language = self::DEFAULT_LANGUAGE;
+            $this->messageProvider = $data['messageProvider'];
+
         } else {
-            $this->language = isset($this->errorMessages[$data['language']])?
-                              $data['language']: self::DEFAULT_LANGUAGE;
-            unset($data['language']);
+            HTML_QuickForm2_Loader::loadClass('HTML_QuickForm2_MessageProvider_Default');
+            $this->messageProvider = HTML_QuickForm2_MessageProvider_Default::getInstance();
         }
+        if (isset($data['language'])) {
+            $this->language = $data['language'];
+        }
+        unset($data['messageProvider'], $data['language']);
         parent::__construct($name, $attributes, $data);
     }
 
@@ -168,8 +128,9 @@ class HTML_QuickForm2_Element_InputFile extends HTML_QuickForm2_Element_Input
     * file somewhere and store the file info in session. This is way outside
     * the scope of this class.
     *
-    * @param    bool    Whether element should be frozen or editable. This
-    *                   parameter is ignored in case of file uploads
+    * @param bool $freeze Whether element should be frozen or editable. This
+    *                     parameter is ignored in case of file uploads
+    *
     * @return   bool    Always returns false
     */
     public function toggleFrozen($freeze = null)
@@ -182,15 +143,26 @@ class HTML_QuickForm2_Element_InputFile extends HTML_QuickForm2_Element_Input
     *
     * @return   array|null
     */
-    public function getValue()
+    public function getRawValue()
     {
         return $this->value;
     }
 
    /**
+    * Alias of getRawValue(), InputFile elements do not allow filters
+    *
+    * @return   array|null
+    */
+    public function getValue()
+    {
+        return $this->getRawValue();
+    }
+
+   /**
     * File upload's value cannot be set here
     *
-    * @param     mixed    Value for file element, this parameter is ignored
+    * @param mixed $value Value for file element, this parameter is ignored
+    *
     * @return    HTML_QuickForm2_Element_InputFile
     */
     public function setValue($value)
@@ -200,6 +172,26 @@ class HTML_QuickForm2_Element_InputFile extends HTML_QuickForm2_Element_Input
 
     protected function updateValue()
     {
+        // request #16807: file uploads should not be added to forms with
+        // method="get", enctype should be set to multipart/form-data
+        // we cannot do this in setContainer() as the element may be added to
+        // e.g. a group first and then the group may be added to a form
+        $container = $this->getContainer();
+        while (!empty($container)) {
+            if ($container instanceof HTML_QuickForm2) {
+                if ('get' == $container->getAttribute('method')) {
+                    throw new HTML_QuickForm2_InvalidArgumentException(
+                        'File upload elements can only be added to forms with post submit method'
+                    );
+                }
+                if ('multipart/form-data' != $container->getAttribute('enctype')) {
+                    $container->setAttribute('enctype', 'multipart/form-data');
+                }
+                break;
+            }
+            $container = $container->getContainer();
+        }
+
         foreach ($this->getDataSources() as $ds) {
             if ($ds instanceof HTML_QuickForm2_DataSource_Submit) {
                 $value = $ds->getUpload($this->getName());
@@ -227,21 +219,19 @@ class HTML_QuickForm2_Element_InputFile extends HTML_QuickForm2_Element_Input
         if (strlen($this->error)) {
             return false;
         }
-        if (isset($this->value['error']) &&
-            !in_array($this->value['error'], array(UPLOAD_ERR_OK, UPLOAD_ERR_NO_FILE)))
-        {
-            if (isset($this->errorMessages[$this->language][$this->value['error']])) {
-                $errorMessage = $this->errorMessages[$this->language][$this->value['error']];
-            } else {
-                $errorMessage = $this->errorMessages[self::DEFAULT_LANGUAGE][$this->value['error']];
-            }
+        if (isset($this->value['error'])
+            && !in_array($this->value['error'], array(UPLOAD_ERR_OK, UPLOAD_ERR_NO_FILE))
+        ) {
+            $errorMessage = $this->messageProvider instanceof HTML_QuickForm2_MessageProvider
+                            ? $this->messageProvider->get(array('file', $this->value['error']), $this->language)
+                            : call_user_func($this->messageProvider, array('file', $this->value['error']), $this->language);
             if (UPLOAD_ERR_INI_SIZE == $this->value['error']) {
                 $iniSize = ini_get('upload_max_filesize');
                 $size    = intval($iniSize);
                 switch (strtoupper(substr($iniSize, -1))) {
-                    case 'G': $size *= 1024;
-                    case 'M': $size *= 1024;
-                    case 'K': $size *= 1024;
+                case 'G': $size *= 1024;
+                case 'M': $size *= 1024;
+                case 'K': $size *= 1024;
                 }
 
             } elseif (UPLOAD_ERR_FORM_SIZE == $this->value['error']) {
@@ -256,6 +246,20 @@ class HTML_QuickForm2_Element_InputFile extends HTML_QuickForm2_Element_Input
             return false;
         }
         return parent::validate();
+    }
+
+    public function addFilter($callback, array $options = array())
+    {
+        throw new HTML_QuickForm2_Exception(
+            'InputFile elements do not support filters'
+        );
+    }
+
+    public function addRecursiveFilter($callback, array $options = array())
+    {
+        throw new HTML_QuickForm2_Exception(
+            'InputFile elements do not support filters'
+        );
     }
 }
 ?>
