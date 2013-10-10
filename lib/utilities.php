@@ -1,4 +1,33 @@
 <?php
+function stop_progress(){
+    if( DEBUG==0 ){
+        die;
+    }
+    if( APP::$systemConfigs['Debug']==0 ){
+        //提供APP於執行期決定是否關閉訊息
+        die;
+    }
+    echo '<b>Cookies:</b>';
+    pr($_COOKIE);
+    echo '<b>PageBeforeLogin:</b>';
+    pr($_SESSION['PageBeforeLogin']);
+    
+    echo '<b>Routing:</b>';
+    pr(APP::$routing);
+    
+    echo '<b>Layout Settings:</b>';
+    ob_start();
+    print_r(View::$layoutConfigs);
+    $html = htmlspecialchars( ob_get_contents() );
+    ob_end_clean();
+    echo '<pre>'.str_replace('  ', '&nbsp; ', $html).'</pre>';
+    
+    //pr(Dispatch::$params);
+    //pr($pageConfig);
+    markquery_report();
+    marktime_report();
+    die;
+}
 function pr($var){
     if( APP::$systemConfigs['Production']==1 ) return ;
     

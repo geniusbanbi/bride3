@@ -544,6 +544,10 @@ class View{
                     errmsg('您指定的錯誤呈現頁: '.$path.' 不存在');
                 }
                 include( $file );
+                
+                //呼叫系統的全程式終止程序
+                stop_progress();
+                
                 break;
             case 'template':
                 $path = 'layout_'.$layout.'/tpl_'.$name.EXT;
@@ -822,12 +826,20 @@ class View{
                 $contents.=self::link($_link, $absolute_url)."\n";
                 continue;
             }
-            if( substr($url,0,1)=='/' ){
-                //表示指定絕對路徑，跳過預設的相對路徑，由使用者決定站內的絕對位置
+
+            if( substr($url,0,1) === '_' ){
+                //表示這是絕對路徑，此路徑與layout無關，只要幫他補上webroot就可以了
                 $absolute_url=true;
-                $url=url($url);
-                $_link['href']='_'.$url;
+                $url = url($url); //補上WEBROOT
+                $_link['href']=$url;
                 $contents.=self::link($_link, $absolute_url)."\n";
+                continue;
+            }
+            
+            if( substr($url,0,1) === '/' ){
+                //表示不預設前綴路徑/css/，由使用者決定layout內的路徑
+                $_link['href']=substr($url,1); //修改為相對於layout的相對路徑
+                $contents.=self::link($_link)."\n";
                 continue;
             }
             //預設為相對路徑，base 為 layout 的 css 資料夾
@@ -847,11 +859,18 @@ class View{
                 $contents.=self::script($url, $absolute_url)."\n";
                 continue;
             }
-            if( substr($url,0,1)=='/' ){
-                //視為根目錄路徑，表示要走程式化路徑 (由程式產生)
+
+            if( substr($url,0,1) === '_' ){
+                //表示這是絕對路徑，此路徑與layout無關，只要幫他補上webroot就可以了
                 $absolute_url=true;
-                $url=url('_'.$url);
+                $url = url($url); //補上WEBROOT
                 $contents.=self::script($url, $absolute_url)."\n";
+                continue;
+            }
+
+            if( substr($url,0,1) === '/' ){
+                //表示不預設前綴路徑/css/，由使用者決定layout內的路徑
+                $contents.=self::script($url)."\n"; //修改為相對於layout的相對路徑
                 continue;
             }
             //預設路徑為 layout 的 js資料夾

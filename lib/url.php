@@ -59,7 +59,9 @@ function redirect( $href , $message='' , $message_template='' ){
 </html>
 EOF;
         echo $redirectMiddlePage;
-        exit;
+        
+        //呼叫系統的全程式終止程序
+        stop_progress();
     }else{
     	$headers=headers_list();
     	$cookies=array();
@@ -78,7 +80,9 @@ EOF;
 		foreach( $cookies as $cookie ){
             header( $cookie );
         }
-        exit;
+        
+        //呼叫系統的全程式終止程序
+        stop_progress();
     }
 }
 
@@ -255,7 +259,7 @@ function layout_url(){
 
     //如果傳入的參數是字串，則以字串URL方式處理
     if( is_string($href) ){
-        if( substr($href, 0, 1)!='/' ){
+        if( substr($href, 0, 1) !== '/' ){
             $href = '/'.$href;
         }
         return txturl('/layout_'.$layout.$href);
@@ -269,7 +273,7 @@ function layout_url(){
 function repos_url( $href ){
     //如果傳入的參數是字串，則以字串URL方式處理
     if( is_string($href) ){
-        if( substr($href, 0, 1)!='/' ){
+        if( substr($href, 0, 1) !== '/' ){
             $href = '/'.$href;
         }
         return txturl('/cabinets'.$href);
@@ -290,7 +294,7 @@ function app_url( $app ){
 function repos_path( $href ){
     //如果傳入的參數是字串，則以字串URL方式處理
     if( is_string($href) ){
-        if( substr($href, 0, 1)!='/' ){
+        if( substr($href, 0, 1) !== '/' ){
             $href = '/'.$href;
         }
         return './cabinets'.$href;
@@ -312,7 +316,7 @@ function txturl( $href ){
     if( preg_match( '/^http/i', $href) ){ return $href; }
     
     
-    if( substr($href, 0, 1)=='/' ){
+    if( substr($href, 0, 1) === '/' ){
         return WEBROOT.substr($href, 1);
     }
     return WEBROOT.$href;
