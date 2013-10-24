@@ -413,6 +413,7 @@ class Model{
     	
     	$sql=sprintf("UPDATE ".$useTable." SET %s WHERE %s",implode(',',$fs), implode(' AND ',$where_list) );
     	//echo $sql.'<br>';
+    	//file_put_contents(DIRROOT.'sql_log.txt', $sql."\n", FILE_APPEND);
     	return Model::execute($sql);
     }
     function query($sql){

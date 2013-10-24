@@ -274,14 +274,17 @@ class Inflector{
  * @static
  * @link http://book.cakephp.org/view/572/Class-methods
  */
-	function slug($string, $replacement = '-') {
+	function slug($string, $replacement = '-', $forceSpace = false) {
         $a1="\x{2e80}-\x{33ff}";//中日韓符號區
         $a2="\x{3400}-\x{4dff}";//中日韓認同表意文字擴充A區
         $a3="\x{4e00}-\x{9fff}";//中日韓認同表意文字區
         $a4="\x{fb00}-\x{fffd}";//中日韓相容表意文字區，總計收容302個中日韓漢字
         $a5="\x{f900}-\x{faff}";//文字表現形式區，收容組合拉丁文字、希伯來文、阿拉伯文、中日韓直式標點、小符號、半形符號、全形符號等
         
-        $replacement='-';
+        $remove = '';
+        if( $forceSpace ){
+            $remove = ' ';
+        }
 		$map = array(
 			'/à|á|å|â/' => 'a',
 			'/è|é|ê|ẽ|ë/' => 'e',
@@ -297,13 +300,13 @@ class Inflector{
 			'/Ü/' => 'Ue',
 			'/Ö/' => 'Oe',
 			'/ß/' => 'ss',
-            '/【|】|～|「|」|『|』|《|》|（|）|〈|〉|？|～|！|＠|＃|＄|％|︿|＆|＊|＿|＋|“|”|〝|〞|‵|′｜/' => '',
-            '/〤|○|⊙|◎|●|☆|★|□|■|▼|▲|▽|△|◇|◆|♀|♂|﹡|＊|※|§|＠|⊕|㊣/' => '',
+            '/【|】|～|「|」|『|』|《|》|（|）|〈|〉|？|～|！|＠|＃|＄|％|︿|＆|＊|＿|＋|“|”|〝|〞|‵|′｜/' => $remove,
+            '/〤|○|⊙|◎|●|☆|★|□|■|▼|▲|▽|△|◇|◆|♀|♂|﹡|＊|※|§|＠|⊕|㊣|\*/' => $remove,
             '/↑|↓|←|→|↖|↗|↙|↘|\?/' => '',
-            '/,|，|：|；|、|。|　|●/' => $replacement,
+            '/,|，|：|；|、|。|　|●|─|…|＜|＞|\_/' => $replacement,
 			//'/[^\w\s]/' => $replacement, // 這行會把中文濾掉
 			'/\\s+/' => $replacement,
-			'/^[-]+|[-]+$/' => '',
+			'/^[-]+|[-]+$/' => $remove,
 			// 變更 $replacement 時，請執行以下程式碼，將產生的結果改為最後的索引
 			// String::insert('/^[:replacement]+|[:replacement]+$/', array('replacement' => preg_quote($replacement, '/')))
 			// ===>   /^[-]+|[-]+$/

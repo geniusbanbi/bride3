@@ -42,7 +42,7 @@ if($str != '')
     //词性标注
     $do_prop = empty($_POST['do_prop']) ? false : true;
     //是否预载全部词条
-    $pri_dict = empty($_POST['pri_dict']) ? false : true;
+    $pri_dict = true;
     
     $tall = microtime(true);
     

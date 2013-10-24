@@ -1,10 +1,10 @@
 <?php
 //编译词库
-ini_set('memory_limit', '128M');
+ini_set('memory_limit', '512M');
 error_reporting(E_ALL);
 header('Content-Type: text/html; charset=utf-8');
 require_once('phpanalysis.class.php');
-$dicAddon = dirname(__FILE__).'/dict/not-build/base_dic_full.txt';
+$dicAddon = dirname(__FILE__).'/dict/not-build/base_dic_source_zhtw.txt';
 
 if( empty($_GET['ac']) )
 {
@@ -16,10 +16,16 @@ if( empty($_GET['ac']) )
 
 if( $_GET['ac']=='make' )
 {
+    set_time_limit(600);
+    $target_path = dirname(__FILE__).'/dict/base_dic_full.dic';
+    
+    echo $dicAddon.'<br>';
+    echo $target_path.'<br>';
     PhpAnalysis::$loadInit = false;
     $pa = new PhpAnalysis('utf-8', 'utf-8', false);
-    $pa->MakeDict( $dicAddon );
-    echo "完成词典创建！";
+    echo '開始<br>';
+    $pa->MakeDict( $dicAddon, $target_path );
+    echo "完成词典创建！<br>";
     exit();
 }
 else
