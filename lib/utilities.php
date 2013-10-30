@@ -122,7 +122,9 @@ function readableFilesize($size) {
     return round($size, 2) . ' ' . $units[$i];
 }
 function errmsg( $errmsg='' ){
-    if( APP::$systemConfigs['Production']==1 ) return ;
+    if( APP::$systemConfigs['Production']==1 ){
+        View::render('error', 500);
+    }
     
     $backtrace=debug_backtrace();
     //pr($backtrace);
@@ -138,7 +140,8 @@ function errmsg( $errmsg='' ){
     //pr($backtrace);
     $msg.=debugBacktrace();
     
-    die($msg);
+    echo $msg;
+    stop_progress();
 }
 function debugBacktrace(){
     $backtrace=debug_backtrace();
@@ -180,6 +183,9 @@ function errorHandler($errno, $errstr, $errfile, $errline){
     if ( ! (error_reporting() & $errno) ){
         //pr(debug_backtrace());
         return;
+    }
+    if( APP::$systemConfigs['Production']==1 ){
+        View::render('error', 500);
     }
     
     switch ($errno) {
