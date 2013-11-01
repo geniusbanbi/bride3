@@ -90,14 +90,37 @@ class Routing{
         //建立路徑對應表
         $routingTable = RoutingConfigs::$apps[ $prefix ];
         foreach( $routingTable as $path=>$config ){
-            RoutingConfigs::$maps[ $config['name'] ]=$path;
-            RoutingConfigs::$r_maps[ $path ]=$config['name'];
+            if( ! isset($config['parents']) ){
+                RoutingConfigs::$maps[ $config['name'] ] = $path;
+            }else{
+                RoutingConfigs::$maps[ $config['name'] ][ $config['parents'] ] = $path;
+            }
+            RoutingConfigs::$r_maps[ $path ] = $config['name'];
             //設定各app的母親app
-            RoutingConfigs::$parents[ $config['name'] ]='';
+            if( ! isset(RoutingConfigs::$parents[ $config['name'] ]) ){
+                RoutingConfigs::$parents[ $config['name'] ]='';
+            }
             if( isset($config['parents']) ){
-                RoutingConfigs::$parents[ $config['name'] ]=$config['parents'];
+                $parents = RoutingConfigs::$parents[ $config['name'] ];
+                if( is_string($parents) && ! empty($parents) ){
+                    RoutingConfigs::$parents[ $config['name'] ] = array(
+                        RoutingConfigs::$maps[ $config['name'] ][ $parents ] => $parents,
+                        $path => $config['parents'],
+                    );
+                    continue;
+                }
+                if( is_array($parents) ){
+                    RoutingConfigs::$parents[ $config['name'] ][ $config['parents'] ] = $path;
+                    continue;
+                }
+                RoutingConfigs::$parents[ $config['name'] ] = $config['parents'];
             }
         }
+        unset($parents);
+        //print_r(RoutingConfigs::$maps);
+        //print_r(RoutingConfigs::$r_maps);
+        //print_r(RoutingConfigs::$parents);
+        //die;
         
         //排除prefix在實際路徑上的資料
         $p_app = $p;
@@ -128,39 +151,63 @@ class Routing{
                 $re_path=str_replace('/', '\/', $re_path);
                 $re_path=str_replace('\*', '([^\/]+?)', $re_path);
                 $re_path='/'.$re_path.'/';
-                //print($re_path).'<br>';
-                if( preg_match_all( $re_path, $p_app, $matches ) ){
+                //print($path).'<br>';
+                if( preg_match_all( $re_path, $p_app, $matches ) ){ // $p_app 去除 ext 的路徑
+                    //取得母 app
+                    $parents = RoutingConfigs::$parents[ $config['name'] ];
+                    if( is_array($parents) ){
+                        $parents = RoutingConfigs::$parents[ $config['name'] ][ $path ];
+                    }
                     
                     $match=true;
                     $app = $config['name'];
                     $app_path = array_shift($matches);
                     $app_path = substr($app_path[0], 0, -1);
-                    /*echo '<pre>';
-                    print_r($matches).'</pre><br>';*/
+
                     //將比對出來的變數一一儲存下來
                     //動態路由內的變數，將依序插入APP::$params陣列的前方
-                    foreach( $matches as $key=>$p_match ){
-                        $path_vars[] = $p_match[0];
+                    $matches_vars = array();
+                    foreach( $matches as $ms ){
+                        $matches_vars[] = $ms[0];
                     }
+                    /*echo '<pre>';
+                    print_r($matches_vars).'</pre><br>';*/
+                    
                     //更新自身和所有母親APP的路徑
                     $i=0;
                     $renew_app=$app;
+                    $renew_levels = count($matches);
                     do{
-                        $renew_path=RoutingConfigs::$maps[ $renew_app ]; //原路徑（含星號的路徑）
-                        $updated_path=vsprintf( str_replace('*', '%s', $renew_path), $path_vars ); //更新後的路徑
-                        //更新正查app->path
-                        RoutingConfigs::$maps[ $renew_app ]=$updated_path;
-                        //更新反查path->app
-                        RoutingConfigs::$r_maps[ $updated_path ]=$renew_app;
-                        unset(RoutingConfigs::$r_maps[ $renew_path ]);
-                        
+                        $renew_parents = RoutingConfigs::$parents[ $renew_app ];
+                        if( is_array($renew_parents) ){
+                            $renew_parents = RoutingConfigs::$parents[ $config['name'] ][ $path ];
+                        }
+
                         //檢查是否有母APP
                         if( ! empty(RoutingConfigs::$parents[$renew_app]) ){
+                            $renew_path=RoutingConfigs::$maps[ $renew_app ][ $renew_parents ]; //原路徑（含星號的路徑）
+                            $updated_path=vsprintf( str_replace('*', '%s', $renew_path), $matches_vars ); //更新後的路徑
+                            
+                            //echo $i.' APP:'.$renew_app.' PARENTS:'.$renew_parents.' PATH:'.$updated_path."\n";
+                            
+                            //更新正查app->path
+                            RoutingConfigs::$maps[ $renew_app ][ $renew_parents ]=$updated_path;
+                            //更新反查path->app
+                            RoutingConfigs::$r_maps[ $updated_path ]=$renew_app;
+                            unset(RoutingConfigs::$r_maps[ $renew_path ]);
+                            
                             $renew_app=RoutingConfigs::$parents[$renew_app];
+                            //更新 APP::$params['parents']
+                            $path_vars[ $renew_parents ] = $matches[($renew_levels-$i-1)][0];
+                            /*$path_vars[] = array(
+                                'parent_id' => $matches[($renew_levels-$i-1)][0],
+                                'parents' => $renew_parents,
+                            );*/    
                         }else{
                             $renew_app='';
                         }
                         $i+=1;
+
                         if( $i>10 ){ break; }
                     }while( ! empty($renew_app) );
                     

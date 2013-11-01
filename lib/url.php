@@ -105,11 +105,39 @@ function anchor( $name, $href, $options=array() ){
     return $html;
 }
 function get_parents_app( $app ){
+    if( is_array(RoutingConfigs::$parents[ $app ]) ){
+        reset(APP::$routing['parents']);
+        $parents = key(APP::$routing['parents']);
+        
+        return $parents;
+    }
     return RoutingConfigs::$parents[ $app ];
 }
-function get_app_path( $app ){
+function get_app_path( $app, $parents='' ){
+    if( is_array( RoutingConfigs::$maps[ $app ] ) ){
+        if( empty($parents) ){ //沒有指定 parents，取自己的parents作為預設值
+            reset(APP::$routing['parents']);
+            $parents = key(APP::$routing['parents']);
+            $parents = get_parents_app($app);
+            
+            $app_path = RoutingConfigs::$maps[ $app ][ $parents ];
+            //pr(RoutingConfigs::$maps);
+            //echo $app.' '.$parents.' '.$app_path.'<br>';
+            if( ! is_string($app_path) ){ errmsg('找不到路徑，錯誤的回傳值 - Error 1'); }
+            
+            return RoutingConfigs::$maps[ $app ][ $parents ];
+        }
+        //指定 parents 的狀況
+        $app_path = RoutingConfigs::$maps[ $app ][ $parents ];
+        if( ! is_string($app_path) ){ errmsg('找不到路徑，錯誤的回傳值 - Error 2'); }
+        
+        return $app_path;
+    }
     if( isset( RoutingConfigs::$maps[ $app ] ) ){
-        return RoutingConfigs::$maps[ $app ];
+        $app_path = RoutingConfigs::$maps[ $app ];
+        if( ! is_string($app_path) ){ errmsg('找不到路徑，錯誤的回傳值 - Error 3'); }
+        
+        return $app_path;
     }
     return '';
 }
@@ -185,7 +213,8 @@ function url( $href ){
             $href = substr($href, 1);
             $base = get_base_root();
             if( APP::$app != 'main' ){
-                $base .= RoutingConfigs::$maps[ APP::$app ].'/';
+                $app_path = get_app_path( APP::$app );
+                $base .= $app_path.'/';
             }
             //如果 $base & $href 同時非空白，此時會多一個 "/" ，因此需要移除其中一個
             if( ! empty($base) && ! empty($href) ){
@@ -232,7 +261,8 @@ function url( $href ){
         if( $status === 0 ){
             $base = get_base_root();
             if( APP::$app != 'main' ){
-                $base .= RoutingConfigs::$maps[ APP::$app ].'/';
+                $app_path = get_app_path( APP::$app );
+                $base .= $app_path.'/';
             }
             $href = $base.$href;
         }
@@ -285,12 +315,23 @@ function repos_url( $href ){
     
     return false;
 }
-function app_url( $app ){
+function app_url( $app , $parents='' ){
     //傳入app名稱，回傳該app的根路徑
     if( ! array_key_exists( $app, RoutingConfigs::$maps ) ){
         errmsg('指定的 app 尚未設定');
     }
-    return '/'.RoutingConfigs::$maps[ $app ].'/';
+    
+    if( is_string(RoutingConfigs::$maps[ $app ]) ){ //單純的單層路徑狀況
+        $app_path = get_app_path($app);
+        return '/'.$app_path.'/';
+    }
+    if( ! empty($parents) ){ //指定parents的狀況
+        $app_path = get_app_path($app, $parents);
+        return '/'.$app_path.'/';
+    }
+    
+    $app_path = get_app_path($app);
+    return '/'.$app_path.'/';
 }
 function repos_path( $href ){
     //如果傳入的參數是字串，則以字串URL方式處理

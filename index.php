@@ -43,6 +43,9 @@ $routing_args['ME']=$ME;
 print_r($routing_args);
 echo '</pre>';
 echo '<pre>';
+print_r(RoutingConfigs::$maps);
+echo '</pre>';
+echo '<pre>$_GET:'."<br>\n";
 print_r($_GET);
 echo '</pre>';
 die;*/
