@@ -105,37 +105,48 @@ function anchor( $name, $href, $options=array() ){
     return $html;
 }
 function get_parents_app( $app ){
-    if( is_array(RoutingConfigs::$parents[ $app ]) ){
-        reset(APP::$routing['parents']);
-        $parents = key(APP::$routing['parents']);
+    if( isset(RoutingConfigs::$maps[$app]['path']) ){
+        
+        $parents = pos(RoutingConfigs::$maps[ $app ]['path']);
         
         return $parents;
     }
-    return RoutingConfigs::$parents[ $app ];
+    
+    //沒有 path 記錄，表示這不是此 $app 的 parents，是查閱別人 app 的 parents，因此全部回傳
+    return RoutingConfigs::$maps[$app];
 }
-function get_app_path( $app, $parents='' ){
-    if( is_array( RoutingConfigs::$maps[ $app ] ) ){
-        if( empty($parents) ){ //沒有指定 parents，取自己的parents作為預設值
-            reset(APP::$routing['parents']);
-            $parents = key(APP::$routing['parents']);
-            $parents = get_parents_app($app);
-            
-            $app_path = RoutingConfigs::$maps[ $app ][ $parents ];
-            //pr(RoutingConfigs::$maps);
-            //echo $app.' '.$parents.' '.$app_path.'<br>';
+function get_app_path( $app, $options=array() ){
+    $set_parents = '';
+    if( isset($options['parents']) ){
+        $set_parents = $options['parents'];
+        unset($options['parents']);
+    }
+    $set_path = '';
+    if( isset($options['path']) ){
+        $set_path = $options['path'];
+        unset($options['path']);
+    }
+    
+    if( isset( RoutingConfigs::$maps[ $app ]['path'] ) ){
+        $my_parents = get_parents_app($app);
+        if( empty($set_parents) || $set_parents === $my_parents ){ //沒有指定 parents，或指定的parents就是自己的parents
+        
+            $app_path = key(RoutingConfigs::$maps[ $app ]['path']);
+
             if( ! is_string($app_path) ){ errmsg('找不到路徑，錯誤的回傳值 - Error 1'); }
             
-            return RoutingConfigs::$maps[ $app ][ $parents ];
+            return $app_path;
         }
-        //指定 parents 的狀況
-        $app_path = RoutingConfigs::$maps[ $app ][ $parents ];
+        
+        //有指定 parents 的狀況
+        $app_path = array_search( $set_parents, RoutingConfigs::$maps[ $app ]);
+        
         if( ! is_string($app_path) ){ errmsg('找不到路徑，錯誤的回傳值 - Error 2'); }
         
         return $app_path;
     }
     if( isset( RoutingConfigs::$maps[ $app ] ) ){
-        $app_path = RoutingConfigs::$maps[ $app ];
-        if( ! is_string($app_path) ){ errmsg('找不到路徑，錯誤的回傳值 - Error 3'); }
+        $app_path = key(RoutingConfigs::$maps[ $app ]);
         
         return $app_path;
     }
