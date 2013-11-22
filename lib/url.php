@@ -117,14 +117,18 @@ function get_parents_app( $app ){
 }
 function get_app_path( $app, $options=array() ){
     $set_parents = '';
-    if( isset($options['parents']) ){
-        $set_parents = $options['parents'];
-        unset($options['parents']);
-    }
-    $set_path = '';
-    if( isset($options['path']) ){
-        $set_path = $options['path'];
-        unset($options['path']);
+    if( is_string($options) ){
+        $set_parents = $options;
+    }else{
+        if( isset($options['parents']) ){
+            $set_parents = $options['parents'];
+            unset($options['parents']);
+        }
+        $set_path = '';
+        if( isset($options['path']) ){
+            $set_path = $options['path'];
+            unset($options['path']);
+        }
     }
     
     if( isset( RoutingConfigs::$maps[ $app ]['path'] ) ){
