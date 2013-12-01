@@ -8,7 +8,7 @@ class AuthComponent{
         'passwordCol' => 'password',
         'cryptTypeCol' => 'algorithm',
         'saltCol' => 'salt',
-        'isActiveCol' => 'is_active',
+        'isActiveCol' => 'is_actived',
         'isActiveAllowed' => '1',
         'deletedCol' => 'deleted',
         'deletedAllowed' => '0',
@@ -101,14 +101,11 @@ class AuthComponent{
         $form->addElement('header', '', $header );
         
         $form->addElement('hidden', 'id', $_SESSION['admin']['id'] );
-        $form->addElement('password', 'password', '請輸入原密碼', array('class'=>'input-medium'));
-        $form->addElement('password', 'password1', '密碼', array('class'=>'input-medium password'));
-        $form->addElement('password', 'password2', '再輸入一次', array('class'=>'input-medium'));
+        $form->addElement('password', 'password', '請輸入原密碼', array('class'=>'input-large'));
+        $form->addElement('password', 'password1', '密碼', array('class'=>'input-large'));
+        $form->addElement('password', 'password2', '再輸入一次', array('class'=>'input-large'));
         
-        $buttons=array();
-        $buttons[] = &HTML_QuickForm::createElement('submit', 'commit', '送出', array('class'=>'submit-green'));
-        $buttons[] = &HTML_QuickForm::createElement('reset' , '', '重設', array('class'=>'submit-gray'));
-        $buttons[] = &HTML_QuickForm::createElement('button', '', '取消', array('class'=>'submit-gray','onclick'=>'this.form.submit();'));
+        $buttons=Form::buttons();
         $form->addGroup($buttons, null, null, '&nbsp;');
         
         $form->addRule('id','目標帳戶不可留空', 'required', '', 'client');
@@ -179,6 +176,11 @@ class AuthComponent{
         unset($authdata[ self::$params['isActiveCol'] ]);
         unset($authdata[ self::$params['deletedCol'] ]);
         unset($authdata[ 'plugin' ]);
+        
+        if( isset($authdata['contacts']) ){
+            $authdata['contacts'] = unserialize($authdata['contacts']);
+        }
+        
         
         return $authdata;
     }
