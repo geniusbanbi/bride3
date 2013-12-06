@@ -189,76 +189,15 @@ class AuthComponent{
     }
     function getPrivileges( $userid ){
         //個人層級權限設定
-        $sql="SELECT * FROM privileges WHERE request=".APP::$mdb->quote( $userid , 'text');
-        $res=APP::$mdb->query($sql);
+        APP::load('model', 'Managers');
         
-        $personal=array();
-        while( $row = APP::$mdb->fetchRow($res) ){
-            $content=$row['content'];
-            $access=$row['access'];
-            list($app,$action)=explode('.', $content);
-            $personal[$app][$action]=$access;
+        $data = Managers::loadPrivileges( $userid );
+        
+        $privs = array();
+        foreach( $data as $action => $info ){
+            $privs[ $action ] = ( $info['access']==='allow' ) ? 'allow' : 'deny';
         }
         
-        //檢查群組權限表是否存在，不存在就略過群組權限的處理
-        $sql= "SHOW TABLES LIKE 'groups_managers'";
-        $res = APP::$mdb->query($sql);
-        $count=APP::$mdb->numRows($res);
-        $priv=array();
-        if( $count>0 ){
-            //群組層級(管理員身分)權限設定
-            $sql="SELECT * FROM groups_managers WHERE manager_id=".APP::$mdb->quote( $userid , 'text')." ORDER BY sort";
-            $res=APP::$mdb->query($sql);
-            
-            $dignities=array();
-            $dignities_quote=array();
-            while( $row = APP::$mdb->fetchRow($res) ){
-                $dignities[]=$row['group_id'];
-                $dignities_quote[]=APP::$mdb->quote( $row['group_id'] , 'text');
-            }
-            
-            if( count($dignities_quote)>0 ){
-                $sql="SELECT * FROM privileges WHERE request IN (".implode(',', $dignities_quote).")";
-                $res=APP::$mdb->query($sql);
-                
-                $groups=array();
-                while( $row = APP::$mdb->fetchRow($res) ){
-                    $request=$row['request'];
-                    $content=$row['content'];
-                    $access=$row['access'];
-                    list($app,$action)=explode('.', $content);
-                    if( $access==='deny' ){ $access='deny-locked'; }
-                    if( $access==='neutral' ){ $access='deny'; }
-                    $groups[$request][$app][$action]=$access;
-                }
-                
-                foreach( $groups as $group ){
-                    $priv=$priv+$group;
-                }
-            }
-        }
-        //權限表最後結算
-        $privs=array();
-        foreach( $priv as $auth_app=>$actions ){
-            foreach( $actions as $auth_action=>$auth_value ){
-                $auth_u = $personal[$auth_app][$auth_action];
-                $auth_g = $priv[$auth_app][$auth_action];
-                if( $auth_g==='deny-locked' ){
-                    $privs[$auth_app][$auth_action]='deny';
-                    continue;
-                }
-                if( $auth_g==='deny' && $auth_u==='allow' ){
-                    $privs[$auth_app][$auth_action]='allow';
-                    continue;
-                }
-                if( $auth_g==='allow' && $auth_u==='deny' ){
-                    $privs[$auth_app][$auth_action]='deny';
-                    continue;
-                }
-                $privs[$auth_app][$auth_action]=$auth_g;
-            }
-        }
-
         return $privs;
     }
     function getUserClientIP(){
