@@ -95,27 +95,6 @@ class AuthComponent{
         
         return $form;
     }
-    function getChangePasswordForm( $header ){
-        $form=Form::create('frmChangePassword', 'post', APP::$ME );
-        
-        $form->addElement('header', '', $header );
-        
-        $form->addElement('hidden', 'id', $_SESSION['admin']['id'] );
-        $form->addElement('password', 'password', '請輸入原密碼', array('class'=>'input-large'));
-        $form->addElement('password', 'password1', '密碼', array('class'=>'input-large'));
-        $form->addElement('password', 'password2', '再輸入一次', array('class'=>'input-large'));
-        
-        $buttons=Form::buttons();
-        $form->addGroup($buttons, null, null, '&nbsp;');
-        
-        $form->addRule('id','目標帳戶不可留空', 'required', '', 'client');
-        $form->addRule('password','您必須輸入原密碼', 'required', '', 'client');
-        $form->addRule('password1','您必須輸入新密碼', 'required', '', 'client');
-        $form->addRule('password1','密碼必須為6位以上字母或數字', 'rangelength', array(6,64), 'client');
-        $form->addRule(array('password1','password2'), '兩次密碼輸入不相符', 'compare', '', 'client');
-        
-        return $form;
-    }
     function changePassword( $data ){
         //確認密碼輸入後變更密碼
         $sql = "SELECT * FROM managers WHERE id=".Model::quote($data['id'], 'text');
