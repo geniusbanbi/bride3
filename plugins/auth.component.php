@@ -78,20 +78,20 @@ class AuthComponent{
         
         $form=Form::create($formname, 'post', APP::$ME );
         
-        $form->addElement('password', 'userid', '管理者');
+        $form->addElement('password', 'account', '管理者');
         $form->addElement('password', 'password', '密碼');
         $form->addElement('advcheckbox', 'remember', '', '兩週內記得我的登入', '', array('no','auto'));
         $form->addElement('submit', '', '送出');
         
-        $form->addRule( 'userid', '管理者名稱必填', 'required', '', 'client');
-        //$form->addRule( 'userid', '管理者名稱長度區間', 'rangelength', array( 2,32 ), 'client');
-        //$form->addRule( 'userid', '管理者名稱只允許英文和數字', 'alphanumeric', '', 'client');
-        //$form->addRule('userid', '管理者名稱必須是中文', 'regex', '/^[\x{4e00}-\x{9fff}]+$/u', '');
-        $form->addRule( 'userid', '管理者名稱只允許包含中文、英文、數字或符號"_ @ ."', 'regex', '/^[a-zA-Z0-9\_\@\.\x{4e00}-\x{9fff}]+$/u', '');
+        $form->addRule( 'account', '管理者名稱必填', 'required', '', 'client');
+        //$form->addRule( 'account', '管理者名稱長度區間', 'rangelength', array( 2,32 ), 'client');
+        //$form->addRule( 'account', '管理者名稱只允許英文和數字', 'alphanumeric', '', 'client');
+        //$form->addRule('account', '管理者名稱必須是中文', 'regex', '/^[\x{4e00}-\x{9fff}]+$/u', '');
+        $form->addRule( 'account', '管理者名稱只允許包含中文、英文、數字或符號"_ @ ."', 'regex', '/^[a-zA-Z0-9\_\@\.\x{4e00}-\x{9fff}]+$/u', '');
         $form->addRule( 'password', '密碼必填', 'required', '', 'client');
         //$form->addRule( 'password', '密碼長度區間', 'rangelength', array(6,64), 'client');
         
-        $form->applyFilter('userid', 'trim');
+        $form->applyFilter('account', 'trim');
         
         return $form;
     }
