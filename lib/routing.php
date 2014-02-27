@@ -18,7 +18,7 @@ class Routing{
             $defaultPrefix=$prefixMap['__default__']['name'];
         }
 
-        if( empty($p) ){
+        /*if( empty($p) ){
             $handler = 'main';
             if( $prefix !== 'main' ){
                 $handler = $prefix.'#'.$handler;
@@ -34,7 +34,7 @@ class Routing{
                 'doctype'=>'html',
                 'handler'=>$handler,
             );
-        }
+        }*/
         
         //過濾不必要的空白
         $p=trim($p);
@@ -47,6 +47,10 @@ class Routing{
         //若結尾是 "/" ，暗示使用預設 "index.html"，自動補上
         if( substr($p, -1)==='/' ){
             $p.="index.html";
+        }
+        //如果是根目錄，自動補上index.html
+        if( $p === '' ){
+            $p = 'index.html';
         }
         //取得副檔名
         $ext = strtolower( substr( strrchr($p, ".") ,1 ) );

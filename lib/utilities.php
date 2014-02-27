@@ -22,7 +22,7 @@ function stop_progress(){
     ob_end_clean();
     echo '<pre>'.str_replace('  ', '&nbsp; ', $html).'</pre>';
     
-    //pr(Dispatch::$params);
+    pr(RoutingConfigs::$parents);
     //pr($pageConfig);
     markquery_report();
     marktime_report();
