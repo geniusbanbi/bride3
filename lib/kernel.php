@@ -430,13 +430,12 @@ class Model{
     function execute($sql){
         $result=APP::$mdb->exec($sql);
         if( APP::$mdb->isError() ){
-            self::execErrorLog($sql);
-
             Model::query_error($sql);
         }
 
-        self::execLog($sql);
         if( $result!==false ){
+            self::execLog($sql);
+
             return true;
         }
         return false;
@@ -495,8 +494,8 @@ class Model{
     function execLog($sql){
         //file_put_contents( DIRCACHE.'db_exec.log' , date('Y-m-d H:i:s').' '.$sql."\n" , FILE_APPEND | LOCK_EX );
     }
-    function execErrorLog($sql){
-        file_put_contents( DIRCACHE.'db_exec_errors.log' , date('Y-m-d H:i:s').' '.$sql."\n" , FILE_APPEND | LOCK_EX );
+    function execErrorLog($sql, $errmsg){
+        file_put_contents( DIRCACHE.'db_exec_errors.log' , date('Y-m-d H:i:s').' '.$sql."\n".$errmsg."\n" , FILE_APPEND | LOCK_EX );
     }
     function quote($value, $type = null, $quote = true){
         /*  允許的格式參數及其預設值
@@ -538,6 +537,12 @@ class Model{
         $msg.='<p style="font-size:13px;color:black;font-weight:bold;">Error: <span style="color:red;">'.$sql.'</span></p>';
         $msg.='<p style="font-size:13px;color:black;font-weight:normal;"><b>Message:</b> '.mysql_errno($_link).' '.mysql_error($_link).'</p>';
         $msg.=debugBacktrace();
+
+        $log = $err['file'].' Line '.$err['line']."\n";
+        $log.= $err['class'].'::'.$err['function'].'() Complain:'."\n";
+        $log.= mysql_errno($_link).' '.mysql_error($_link)."\n";
+        self::execErrorLog($sql, $log);
+
         echo $msg;
         stop_progress();
     }
