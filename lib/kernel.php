@@ -418,8 +418,10 @@ class Model{
     }
     function query($sql){
         $result=APP::$mdb->query($sql);
-        if( APP::$mdb->isError() )
+        if( APP::$mdb->isError() ){
             Model::query_error($sql);
+        }
+        self::queryLog($sql);
         return $result;
     }
     function exec($sql){
@@ -427,8 +429,12 @@ class Model{
     }
     function execute($sql){
         $result=APP::$mdb->exec($sql);
-        if( APP::$mdb->isError() )
+        if( APP::$mdb->isError() ){
             Model::query_error($sql);
+            self::execErrorLog($sql);
+        }
+
+        self::execLog($sql);
         if( $result!==false ){
             return true;
         }
@@ -438,41 +444,58 @@ class Model{
         $res=$sql;
         if( is_string($sql) ){
             $res=APP::$mdb->query($sql);
-            if( APP::$mdb->isError() )
+            if( APP::$mdb->isError() ){
                 Model::query_error($sql);
+            }
         }
         $rows=APP::$mdb->numRows($res);
+        self::queryLog($sql);
         return $rows;
     }
     function fetchAll($sql){
         $res=$sql;
         if( is_string($sql) ){
             $res=APP::$mdb->query($sql);
-            if( APP::$mdb->isError() )
+            if( APP::$mdb->isError() ){
                 Model::query_error($sql);
+            }
         }
         $rows=APP::$mdb->fetchAll($res);
+        self::queryLog($sql);
         return $rows;
     }
     function fetchRow($sql){
         $res=$sql;
         if( is_string($sql) ){
             $res=APP::$mdb->query($sql);
-            if( APP::$mdb->isError() )
+            if( APP::$mdb->isError() ){
                 Model::query_error($sql);
+            }
         }
         $row=APP::$mdb->fetchRow($res);
+        self::queryLog($sql);
         return $row;
     }
     function fetchOne($sql){
         $res=$sql;
         if( is_string($sql) ){
             $res=APP::$mdb->query($sql);
-            if( APP::$mdb->isError() )
+            if( APP::$mdb->isError() ){
                 Model::query_error($sql);
+            }
         }
         $col=APP::$mdb->fetchOne($res);
+        self::queryLog($sql);
         return $col;
+    }
+    function queryLog($sql){
+        //file_put_contents( DIRCACHE.'db_query.log' , date('Y-m-d H:i:s').' '.$sql."\n" , FILE_APPEND | LOCK_EX );
+    }
+    function execLog($sql){
+        //file_put_contents( DIRCACHE.'db_exec.log' , date('Y-m-d H:i:s').' '.$sql."\n" , FILE_APPEND | LOCK_EX );
+    }
+    function execErrorLog($sql){
+        file_put_contents( DIRCACHE.'db_exec_errors.log' , date('Y-m-d H:i:s').' '.$sql."\n" , FILE_APPEND | LOCK_EX );
     }
     function quote($value, $type = null, $quote = true){
         /*  允許的格式參數及其預設值
