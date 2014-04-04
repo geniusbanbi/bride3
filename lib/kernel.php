@@ -430,8 +430,9 @@ class Model{
     function execute($sql){
         $result=APP::$mdb->exec($sql);
         if( APP::$mdb->isError() ){
-            Model::query_error($sql);
             self::execErrorLog($sql);
+
+            Model::query_error($sql);
         }
 
         self::execLog($sql);
@@ -537,12 +538,14 @@ class Model{
         $msg.='<p style="font-size:13px;color:black;font-weight:bold;">Error: <span style="color:red;">'.$sql.'</span></p>';
         $msg.='<p style="font-size:13px;color:black;font-weight:normal;"><b>Message:</b> '.mysql_errno($_link).' '.mysql_error($_link).'</p>';
         $msg.=debugBacktrace();
-        die( $msg );
+        echo $msg;
+        stop_progress();
     }
     function connect_error( $func , $mdb ){
         echo '<META CONTENT="text/html; charset=utf-8" HTTP-EQUIV="Content-Type">';
         if( APP::$systemConfigs['Production']==1 ){ redirect( 500 ); }
-        die( "Database Connection Error: " . $mdb->getMessage() . '<br>' . $mdb->getDebugInfo() );
+        print( "Database Connection Error: " . $mdb->getMessage() . '<br>' . $mdb->getDebugInfo() );
+        stop_progress();
     }
 }
 
