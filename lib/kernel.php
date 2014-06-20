@@ -56,7 +56,7 @@ class APP{
     );
     function setAction( $action='' ){
         self::$action = $action;
-        self::$id='';
+        self::$id=''; //app 連同 action 的代表號
         if( !empty($action) ){
             self::$id = self::$prefix.'.'.self::$app.'.'.$action;
         }
@@ -67,6 +67,13 @@ class APP{
     }
     function getAction(){
         return self::$action;
+    }
+    function getModelClassName( $app_name = '' ){
+        if( empty($app_name) )
+        {
+            $app_name = self::$app;
+        }
+        return ul2uc($app_name);
     }
     function ID(){
         return self::$id;
@@ -221,7 +228,7 @@ class APP{
     function FileLoader( $type , $name , $resource=array() ){
         
         if( !in_array( $type , array('pears','vendors','plugins','models') ) ){
-            die('Given Parameters: '.$type.' Not Allowed in '.__FUNCTION__);
+            errmsg('Given Parameters: '.$type.' Not Allowed in '.__FUNCTION__);
         }
         $basepath=DIRLIB.$type.DS;
         switch( $type ){
@@ -254,8 +261,8 @@ class APP{
                 break;
             case 'models':
                 $basepath=DIRROOT;
-                if( !in_array( strtolower($name) , APP::$loadedFiles[$type] ) ){
-                    $modelPath = strtolower($name).'_model'.EXT;
+                if( ! in_array( uc2ul($name) , APP::$loadedFiles[$type] ) ){
+                    $modelPath = uc2ul($name).'_model'.EXT;
                     if( APP::$prefix!='main' ){ $modelPath = APP::$prefix.'#'.$modelPath; }
                     require($basepath.$modelPath);
                     //marktime(__FUNCTION__, 'Load '.ucfirst($type).' '.$name);
@@ -267,6 +274,27 @@ class APP{
     }
 
 }
+class AppModel{
+    static $useTable='';
+    static $upload_dir='';
+
+    static $parent_id='';
+    static $parent_data=array();
+
+    public static function setParentID( $parent_id ){
+        self::$parent_id = $parent_id;
+    }
+    public static function getParentID(){
+        return self::$parent_id;
+    }
+    public static function setParentData( $data ){
+        self::$parent_data = $data;
+    }
+    public static function getParentData(){
+        return self::$parent_data;
+    }
+}
+
 
 class Model{
     static $relation=array();
@@ -277,6 +305,8 @@ class Model{
     static $masterModel=''; //記錄誰將成為主要Model，紀錄 Model Class Name, ex. MainModel
     static $masterTable=''; 
     static $masterConfigs=array(); //記錄主要Model的各項設定
+
+    static $dryRun=false;
     
     function insert( $fields , $useTable='', $register_fields=array() ){
         if( ! is_array($register_fields) ){
@@ -353,13 +383,15 @@ class Model{
     }
     function update( $fields , $identify='id' , $useTable='' , $register_fields=array() ){
         if( is_string($identify) ){
-            if( empty($identify) ){ die('更新的對照欄位不能空白（以哪個欄位的內容為更新範圍）'); }
+            if( empty($identify) ){ errmsg('更新的對照欄位不能空白（以哪個欄位的內容為更新範圍）'); }
             $identify=array($identify);
         }
         if( ! is_array($register_fields) ){
             $register_fields=array();
         }
         $where_list=array();
+
+        //update條件參數是陣列的情況
         if( is_array($identify) ){
             foreach($identify as $idf){
                 //如果不是陣列，則視為一般值（ = or LIKE）處理
@@ -417,10 +449,15 @@ class Model{
     	return Model::execute($sql);
     }
     function query($sql){
+        if( self::$dryRun ){ //模擬運作並回傳 $sql
+            return $sql;
+        }
+
         $result=APP::$mdb->query($sql);
         if( APP::$mdb->isError() ){
             Model::query_error($sql);
         }
+
         self::queryLog($sql);
         return $result;
     }
@@ -428,6 +465,10 @@ class Model{
         return Model::execute($sql);
     }
     function execute($sql){
+        if( self::$dryRun ){ //模擬運作並回傳 $sql
+            return $sql;
+        }
+
         $result=APP::$mdb->exec($sql);
         if( APP::$mdb->isError() ){
             Model::query_error($sql);
@@ -522,6 +563,15 @@ class Model{
         $offsetStart = ($pageID-1) * $pageRows ;
         return $offsetStart;
     }
+
+    function dryRun(){
+        self::$dryRun = true;
+        return true;
+    }
+    function stopDryRun(){
+        self::$dryRun = false;
+        return true;
+    }
     
     /**** Error Function ****/
     function query_error( $sql ){
@@ -558,18 +608,34 @@ class View{
     static $Code=200;
     static $cacheLifeTime=-1; //render時的cache存活時間，-1時表示使用layout cache的預設值
     static $layoutConfigs=array(); //輸出頁面的設定資料
+
+    static $errorTplPath=''; // may not been use, just preserved.
+    static $templateTplPath=''; //may not been use, just preserved.
+    static $viewTplPath='';
     
-    function render( $type, $name, $options=array() ){
+    function render( $type='', $name='', $options=array() ){
         //指定特定layout, ex. main: layout_main, admin: layout_admin，否則就是預設版型
         $layout = APP::$prefix;
         if( isset($options['layout']) && ! empty($options['layout']) ){
             $layout = $options['layout'];
             unset($options['layout']);
         }
+        // 設定$type的預設值
+        if( empty($type) ){
+            $type = 'view';
+        }
         
         //type: error, template, view
         switch( $type ){
             case 'error':
+                if( APP::$systemConfigs['Production']==0 ){
+                    //除錯模式下，出現ERROR PAGE應主動標示執行程序
+                    echo '<h1>Error '.$name.'</h1>';
+                    echo debugBacktrace();
+                    echo '<br><br><br><br><br>';
+                    stop_progress();
+                }
+
                 $path = 'layout_'.$layout.'/errors/'.$name.EXT;
                 $file = DIRROOT.$path;
                 if( ! file_exists($file) ){
@@ -590,7 +656,14 @@ class View{
                 include( $file );
                 break;
             case 'view':
-                $path = APP::$handler.'='.$name.EXT;
+                if( ! empty($name) ){
+                    $action_name = $name;
+                    self::setViewTplPath($action_name);
+                }
+                $path = self::getViewTplPath();
+                if( ! $path ){
+                    errmsg('抱歉！不帶任何參數呼叫 View::render() 前，您必須先使用 APP::setAction() 指定 action 名稱');
+                }
                 $file = DIRROOT.$path;
                 if( ! file_exists($file) ){
                     errmsg('您指定的 View: '.$path.' 不存在');
@@ -600,6 +673,65 @@ class View{
             default:
                 errmsg('非預期的 type 參數，不知道該怎麼做');
         }
+    }
+    function set(){ //設定要使用的action template (viewTpl)
+        $args = func_get_args();
+        $args_count = func_num_args();
+
+        switch( $args_count ){
+            case 1:
+                $view_name = array_shift($args);
+                self::setViewTplPath( APP::$handler.'='.$view_name.EXT );
+                break;
+            case 2:
+                $app_name = array_shift($args);
+                $view_name = array_shift($args);
+
+                $prefix = APP::$prefix.'#';
+                if( APP::$prefix === 'main' ){ $prefix = ''; }
+                self::setViewTplPath( $prefix.$app_name.'='.$view_name.EXT );
+                break;
+            case 3:
+                $prefix_name = array_shift($args);
+                $prefix = $prefix_name.'#';
+                if( $prefix_name === 'main' ){ $prefix = ''; }
+
+                $app_name = array_shift($args);
+                $view_name = array_shift($args);
+                self::setViewTplPath( $prefix.$app_name.'='.$view_name.EXT );
+                break;
+            case 4:
+                $site_name = array_shift($args);
+
+                $prefix_name = array_shift($args);
+                $prefix = $prefix_name.'#';
+                if( $prefix_name === 'main' ){ $prefix = ''; }
+
+                $app_name = array_shift($args);
+                $view_name = array_shift($args);
+                self::setViewTplPath( '../site.'.$site_name.'/'.$prefix.$app_name.'='.$view_name.EXT );
+                break;
+            default:
+                errmsg('設定的參數有問題');
+                break;
+        }
+        return true;
+    }
+    function getViewTplPath(){
+        $viewTplPath = self::$viewTplPath;
+        if( empty($viewTplPath) ){
+            $action_name = APP::getAction();
+            if( empty($action_name) ){
+                return false;
+            }
+            $viewTplPath = APP::$handler.'='.$action_name.EXT;
+            self::setViewTplPath( $viewTplPath );
+        }
+        return self::$viewTplPath;
+    }
+    private static function setViewTplPath( $tplPath ){
+        self::$viewTplPath = $tplPath;
+        return true;
     }
     function setTitle( $pageTitle ){
         self::$layoutConfigs['title']=$pageTitle;
