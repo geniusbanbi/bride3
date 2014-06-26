@@ -2,9 +2,12 @@
 class APP{
     static $SESSION=array(); //連結至 $_SESSION
     /* Controller */
-    static $pageTitle=''; //頁面標題
+    static $pageTitle=''; //頁面標題，會出現在 <title>{$pageTitle}</title>內容中的
+    // $pageTitle = ( !empty($prefixTitle) ) ? $prefixTitle.'：'.$actionTitle : $actionTitle ;
     
+    static $prefixTitle=''; //標題前綴詞
     static $mainTitle=''; //應用程式名稱
+    static $actionTitle=''; //action名稱
     static $mainName=''; //程式關鍵字
     /* Database */
     static $mdb; //資料庫操作元件
@@ -307,6 +310,7 @@ class Model{
     static $masterConfigs=array(); //記錄主要Model的各項設定
 
     static $dryRun=false;
+    static $showQuery=false;
     
     function insert( $fields , $useTable='', $register_fields=array() ){
         if( ! is_array($register_fields) ){
@@ -330,6 +334,8 @@ class Model{
     	
     	$sql=sprintf("INSERT INTO ".$useTable." ( %s ) VALUES ( %s )",implode(',',$fs),implode(',',$vs));
     	
+        self::_debugShowQuery($sql);
+
     	return Model::execute($sql);
     }
     function _listFields( $fields ){
@@ -379,6 +385,8 @@ class Model{
     	
     	$sql=sprintf("INSERT INTO ".$useTable." ( %s ) VALUES %s",implode(',',$fs),implode(',',$values));
     	
+        self::_debugShowQuery($sql);
+
     	return Model::execute($sql);
     }
     function update( $fields , $identify='id' , $useTable='' , $register_fields=array() ){
@@ -446,12 +454,13 @@ class Model{
     	$sql=sprintf("UPDATE ".$useTable." SET %s WHERE %s",implode(',',$fs), implode(' AND ',$where_list) );
     	//echo $sql.'<br>';
     	//file_put_contents(DIRROOT.'sql_log.txt', $sql."\n", FILE_APPEND);
+        self::_debugShowQuery($sql);
+
     	return Model::execute($sql);
     }
     function query($sql){
-        if( self::$dryRun ){ //模擬運作並回傳 $sql
-            return $sql;
-        }
+        self::_debugDryRun($sql);
+        self::_debugShowQuery($sql);
 
         $result=APP::$mdb->query($sql);
         if( APP::$mdb->isError() ){
@@ -465,9 +474,8 @@ class Model{
         return Model::execute($sql);
     }
     function execute($sql){
-        if( self::$dryRun ){ //模擬運作並回傳 $sql
-            return $sql;
-        }
+        self::_debugDryRun($sql);
+        self::_debugShowQuery($sql);
 
         $result=APP::$mdb->exec($sql);
         if( APP::$mdb->isError() ){
@@ -482,6 +490,8 @@ class Model{
         return false;
     }
     function numRows($sql){
+        self::_debugShowQuery($sql);
+
         $res=$sql;
         if( is_string($sql) ){
             $res=APP::$mdb->query($sql);
@@ -494,6 +504,8 @@ class Model{
         return $rows;
     }
     function fetchAll($sql){
+        self::_debugShowQuery($sql);
+
         $res=$sql;
         if( is_string($sql) ){
             $res=APP::$mdb->query($sql);
@@ -506,6 +518,8 @@ class Model{
         return $rows;
     }
     function fetchRow($sql){
+        self::_debugShowQuery($sql);
+
         $res=$sql;
         if( is_string($sql) ){
             $res=APP::$mdb->query($sql);
@@ -518,6 +532,8 @@ class Model{
         return $row;
     }
     function fetchOne($sql){
+        self::_debugShowQuery($sql);
+
         $res=$sql;
         if( is_string($sql) ){
             $res=APP::$mdb->query($sql);
@@ -570,6 +586,26 @@ class Model{
     }
     function stopDryRun(){
         self::$dryRun = false;
+        return true;
+    }
+    function showQuery(){
+        self::$showQuery = true;
+        return true;
+    }
+    function stopShowQuery(){
+        self::$showQuery = false;
+        return true;
+    }
+    function _debugDryRun($sql){
+        if( self::$dryRun ){ //模擬運作並回傳 $sql
+            echo $sql.'<br><br>';
+            return true;
+        }
+    }
+    function _debugShowQuery($sql){
+        if( self::$showQuery ){ //輸出 $sql 但繼續執行
+            echo $sql.'<br><br>';
+        }
         return true;
     }
     
@@ -656,7 +692,7 @@ class View{
                 include( $file );
                 break;
             case 'view':
-                if( ! empty($name) ){
+                if( empty($name) && empty(self::$viewTplPath) ){
                     $action_name = $name;
                     self::setViewTplPath($action_name);
                 }

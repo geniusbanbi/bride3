@@ -42,7 +42,6 @@ function redirect( $href , $message='' , $message_template='' ){
     //pr(headers_list());die;
     if( count($_POST)>0 ){
         $delay=1;
-        if( DEBUG ){ $delay=3; }
         $waitimg=layout_url('admin', 'loading.gif');
         $redirectMiddlePage=<<<EOF
 <html>
