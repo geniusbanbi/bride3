@@ -269,7 +269,7 @@ class APP{
                     if( APP::$prefix!='main' ){ $modelPath = APP::$prefix.'#'.$modelPath; }
                     require($basepath.$modelPath);
                     //marktime(__FUNCTION__, 'Load '.ucfirst($type).' '.$name);
-                    APP::$loadedFiles[ $type ][]=strtolower($name);
+                    APP::$loadedFiles[ $type ][]=uc2ul($name);
                 }
                 return true;
                 break;
@@ -283,18 +283,63 @@ class AppModel{
 
     static $parent_id='';
     static $parent_data=array();
+    static $queryMasks=array();
 
+    public static function findById( $id ){
+        $multiple = true;
+        if( is_string($id) ){
+            $multiple = false;
+            $id = array($id);
+        }
+        $id_list=array();
+        foreach( $id as $r ){
+            $id_list[]=Model::quote($r, 'text');
+        }
+        $sql = "SELECT * FROM ".static::$useTable." WHERE id IN (".implode(',', $id_list).")";
+        if( is_array(static::$queryMasks) && count(static::$queryMasks) > 0 ){
+            $sql.=' AND '.implode(' AND ', static::$queryMasks);
+        }
+        if( $multiple ){
+            $data = Model::fetchAll( $sql );
+        }else{
+            $data = Model::fetchRow( $sql );
+        }
+        return $data;
+    }
+    public static function findByUrn( $urn ){
+        $id = $urn;
+
+        $multiple = true;
+        if( is_string($id) ){
+            $multiple = false;
+            $id = array($id);
+        }
+        $id_list=array();
+        foreach( $id as $r ){
+            $id_list[]=Model::quote($r, 'text');
+        }
+        $sql = "SELECT * FROM ".static::$useTable." WHERE urn IN (".implode(',', $id_list).") AND is_deleted='0'";
+        if( is_array(static::$queryMasks) && count(static::$queryMasks) > 0 ){
+            $sql.=' AND '.implode(' AND ', static::$queryMasks);
+        }
+        if( $multiple ){
+            $data = Model::fetchAll( $sql );
+        }else{
+            $data = Model::fetchRow( $sql );
+        }
+        return $data;
+    }
     public static function setParentID( $parent_id ){
-        self::$parent_id = $parent_id;
+        static::$parent_id = $parent_id;
     }
     public static function getParentID(){
-        return self::$parent_id;
+        return static::$parent_id;
     }
     public static function setParentData( $data ){
-        self::$parent_data = $data;
+        static::$parent_data = $data;
     }
     public static function getParentData(){
-        return self::$parent_data;
+        return static::$parent_data;
     }
 }
 

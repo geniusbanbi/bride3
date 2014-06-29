@@ -26,7 +26,13 @@ function stop_progress(){
     //pr($pageConfig);
     markquery_report();
     marktime_report();
+
+    'APP::$loadedFiles<br>';
+    pr(APP::$loadedFiles);
     die;
+}
+function stop(){
+    stop_progress();
 }
 function pr($var){
     if( APP::$systemConfigs['Production']==1 ) return ;
