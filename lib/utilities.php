@@ -11,6 +11,13 @@ function stop_progress(){
     pr($_COOKIE);
     echo '<b>PageBeforeLogin:</b>';
     pr($_SESSION['PageBeforeLogin']);
+
+    $memory_peak = memory_get_peak_usage();
+    $memory_peak_readable = sprintf('%.2f', ($memory_peak / (1024*1024)) ).' MB';
+    echo "memory_get_peak_usage: ".$memory_peak_readable." (".$memory_peak.")<br>";
+    /*$memory_usage = memory_get_peak_usage();
+    $memory_usage_readable = sprintf('%.2f', ($memory_usage / (1024*1024)) ).' MB';
+    echo "memory_get_usage: ".$memory_usage_readable." (".$memory_usage.")<br>";*/
     
     echo '<b>Routing:</b>';
     pr(APP::$routing);
