@@ -1158,6 +1158,30 @@ class View{
         
         View::$layoutConfigs['stylesheets'] = $configs;
     }
+    function remove_stylesheets(){ // 移除一或多個引用的外部 CSS，執行完畢後會回傳共移除多少個項目
+        $args = func_get_args();
+        
+        if( count($args) < 1 ){
+            errmsg('必須傳入至少1個參數');
+        }
+        if( count($args) === 1 ){
+            $args = (array)$args[0];
+        }
+
+        $configs = (array)View::$layoutConfigs['stylesheets'];
+        $count = 0;
+        foreach( $args as $arg ){
+            $key = array_search( $arg, $configs );
+            if( $key !== false ){ // 找到的話，移除該項目
+                unset( $configs[$key] );
+                $count+=1;
+            }
+        }
+        
+        View::$layoutConfigs['stylesheets'] = $configs;
+
+        return $count;
+    }
     function use_javascripts(){
         $args = func_get_args();
         
@@ -1171,6 +1195,30 @@ class View{
         $configs = array_merge( $configs, $args );
         
         View::$layoutConfigs['javascripts'] = $configs;
+    }
+    function remove_javascripts(){ // 移除一或多個引用的外部 javascript，執行完畢後會回傳共移除多少個項目
+        $args = func_get_args();
+        
+        if( count($args) < 1 ){
+            errmsg('必須傳入至少1個參數');
+        }
+        if( count($args) === 1 ){
+            $args = (array)$args[0];
+        }
+
+        $configs = (array)View::$layoutConfigs['javascripts'];
+        $count = 0;
+        foreach( $args as $arg ){
+            $key = array_search( $arg, $configs );
+            if( $key !== false ){ // 找到的話，移除該項目
+                unset( $configs[$key] );
+                $count+=1;
+            }
+        }
+        
+        View::$layoutConfigs['javascripts'] = $configs;
+
+        return $count;
     }
     function use_extra_header(){
         $args = func_get_args();
