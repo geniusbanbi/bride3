@@ -121,6 +121,9 @@ function underline2ucwords( $str ){
  * @version     0.3
  * @link        http://www.jonasjohn.de/snippets/php/readable-filesize.htm
  */
+function readable_filesize($size){
+    return readableFilesize($size);
+}
 function readableFilesize($size) {
  
     // Adapted from: http://www.php.net/manual/en/function.filesize.php
