@@ -137,6 +137,9 @@ function readableFilesize($size) {
  
     return round($size, 2) . ' ' . $units[$i];
 }
+function fileext($file){
+    return pathinfo($file, PATHINFO_EXTENSION);;
+}
 function errmsg( $errmsg='' ){
     if( APP::$systemConfigs['Production']==1 ){
         View::render('error', 500);
