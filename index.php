@@ -38,6 +38,7 @@ if( count($_GET)>0 ){
 }
 $routing_args['p']=$p;
 $routing_args['ME']=$ME;
+$routing_args['DIRROOT']=$my_base;
 
 /*echo '<pre>';
 print_r($routing_args);

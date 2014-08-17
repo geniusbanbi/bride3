@@ -389,6 +389,7 @@ class Model{
         echo '<pre>';
         echo '        $register_fields=array('."\n";
         foreach( $fields as $key=>$value ){
+            if( ! is_string($value) ){ continue; }
             $type = 'text';
             if( preg_match('/^\d{4}-\d{2}-\d{2}/', $value) ){ $type="timestamp"; }
             echo "            '".$key."' => '".$type."',"."\n";
