@@ -67,6 +67,17 @@ marktime('Core', 'App Executed');
 *** 垃圾回收     ****************************************************
 \*******************************************************************/
 
+// 清除核心的快取資料夾 for thumb (如果有縮圖失敗的殘留檔可能會影響運作)
+$cache_path = dirname(__FILE__).'/cache/';
+if($handle = opendir($cache_path)) {
+	while (false !== ($entry = readdir($handle))) {
+	    if( ! in_array($entry, array('.', '..', 'index.html')) ){
+	    	unlink( $cache_path.$entry );
+	    }
+	}
+}
+
+
 marktime( 'Core' , 'Garbage Collection');
 marktime( 'SystemUser', 'User');
 
