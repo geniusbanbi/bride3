@@ -45,17 +45,17 @@ class MRDB{
     }
     function fetchAll( $result ){
         $rows=array();
-        while( $r=mysql_fetch_array($result) ){
+        while( $r=mysql_fetch_assoc($result) ){
             $rows[]=$r;
         }
         return $rows;
     }
     function fetchRow( $result ){
-        $r=mysql_fetch_array($result);
+        $r=mysql_fetch_assoc($result);
         return $r;
     }
     function fetchOne( $result ){
-        $r=mysql_fetch_array($result);
+        $r=mysql_fetch_row($result);
         return $r[0];
     }
     function mysql_query_slave($sql){

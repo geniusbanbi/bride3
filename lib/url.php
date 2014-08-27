@@ -356,8 +356,17 @@ function repos_path( $href ){
         //return './cabinets'.$href;
         return DIRCABINET.$href;
     }
-    if( ! is_array($href) ){
-        return false;
+    
+    return false;
+}
+function cache_path( $href ){
+    //如果傳入的參數是字串，則以字串URL方式處理
+    if( is_string($href) ){
+        if( substr($href, 0, 1) === '/' ){
+            $href = substr($href, 1);
+        }
+        //return './cabinets'.$href;
+        return DIRCACHE.$href;
     }
     
     return false;
