@@ -706,10 +706,25 @@ class View{
         if( empty($type) ){
             $type = 'view';
         }
+        // 檢查是否有 prefix functions file
+        $run_bootstrap = false;
+        $file_name = '_'.APP::$prefix.'_functions.php';
         
+        $global_class = ul2uc(APP::$prefix).'Function'; // ex. MainFunction , AdminFunction
+        if( file_exists( DIRROOT.$file_name ) ){
+            $run_bootstrap = true;
+        }
+        if( $run_bootstrap && method_exists($global_class, 'beforeRender') ){
+            $global_class::beforeRender();
+        }
+
         //type: error, template, view
         switch( $type ){
             case 'error':
+                if( $run_bootstrap && method_exists($global_class, 'beforeRenderError') ){
+                    $global_class::beforeRenderError();
+                }
+
                 if( APP::$systemConfigs['Production']==0 ){
                     //除錯模式下，出現ERROR PAGE應主動標示執行程序
                     echo '<h1>Error '.$name.'</h1>';
@@ -730,6 +745,11 @@ class View{
                 
                 break;
             case 'template':
+                marktime( 'Core', 'Start Rendering Template: '.$name );
+                if( $run_bootstrap && method_exists($global_class, 'beforeRenderTemplate') ){
+                    $global_class::beforeRenderTemplate();
+                }
+
                 $path = 'layout_'.$layout.'/tpl_'.$name.EXT;
                 $file = DIRROOT.$path;
                 if( ! file_exists($file) ){
@@ -742,10 +762,18 @@ class View{
                     $action_name = $name;
                     self::setViewTplPath($action_name);
                 }
+
+                marktime( 'Core', 'Start Rendering View: '.$name );
+                
                 $path = self::getViewTplPath();
                 if( ! $path ){
                     errmsg('抱歉！不帶任何參數呼叫 View::render() 前，您必須先使用 APP::setAction() 指定 action 名稱');
                 }
+
+                if( $run_bootstrap && method_exists($global_class, 'beforeRenderView') ){
+                    $global_class::beforeRenderView();
+                }
+
                 $file = DIRROOT.$path;
                 if( ! file_exists($file) ){
                     errmsg('您指定的 View: '.$path.' 不存在');
