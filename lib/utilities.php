@@ -142,7 +142,7 @@ function fileext($file){
 }
 function errmsg( $errmsg='' ){
     if( APP::$systemConfigs['Production']==1 ){
-        View::render('error', 500);
+        View::render('error', 500);die;
     }
     
     $backtrace=debug_backtrace();
