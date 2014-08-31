@@ -199,8 +199,12 @@ if( file_exists($preload) ){
     }
 }
 
-
-require( DIRROOT.APP::$handler.EXT );
+$_app_path = DIRROOT.APP::$handler.EXT;
+if( file_exists($_app_path) ){
+    require( $_app_path );
+}else{
+    errmsg('找不到執行程式');
+}
 
 
 ?>
