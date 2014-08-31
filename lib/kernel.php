@@ -872,6 +872,28 @@ class View{
     function getTitle(){
         return self::$layoutConfigs['title'];
     }
+    function getHeader( $name ){
+        $key='';
+        if( strpos($name, '.')!==false ){ list($name, $key)=explode('.', $name); }
+
+        $_keys = array(
+            'http_meta','http_metas','sitename','title','meta','metas','stylesheets','javascripts','stylesheet','javascript',
+            'has_layout','layout','template','link','links',
+        );
+        if( ! in_array($name, $_keys) ){
+            errmsg('不支援這個屬性設定：'.$name);
+        }
+        if( in_array($name, array('http_meta','meta','stylesheet','javascript','link')) ){
+            $name.='s';
+        }
+
+        if( empty($key) ){
+            $data = self::$layoutConfigs[$name];
+        }else{
+            $data = self::$layoutConfigs[$name][$key];
+        }
+        return $data;
+    }
     function setHeader( $name, $value ){ //設定Layout標頭<head>
         if( strpos($name, '.')!==false ){ list($name, $key)=explode('.', $name); }
         
