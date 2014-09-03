@@ -690,6 +690,7 @@ class View{
     static $Code=200;
     static $cacheLifeTime=-1; //render時的cache存活時間，-1時表示使用layout cache的預設值
     static $layoutConfigs=array(); //輸出頁面的設定資料
+    static $hasRendered = false;
 
     static $errorTplPath=''; // may not been use, just preserved.
     static $templateTplPath=''; //may not been use, just preserved.
@@ -738,7 +739,10 @@ class View{
                 if( ! file_exists($file) ){
                     errmsg('您指定的錯誤呈現頁: '.$path.' 不存在');
                 }
-                include( $file );
+                if( ! View::isRendered() ){
+                    View::setRendered();
+                    include( $file );
+                }
                 
                 //呼叫系統的全程式終止程序
                 stop_progress();
@@ -755,7 +759,11 @@ class View{
                 if( ! file_exists($file) ){
                     errmsg('您指定的 Template: '.$path.' 不存在');
                 }
+
+                View::setRendered();
+
                 include( $file );
+
                 break;
             case 'view':
                 if( empty($name) && empty(self::$viewTplPath) ){
@@ -778,11 +786,21 @@ class View{
                 if( ! file_exists($file) ){
                     errmsg('您指定的 View: '.$path.' 不存在');
                 }
+
+                View::setRendered();
+
                 include( $file );
+
                 break;
             default:
                 errmsg('非預期的 type 參數，不知道該怎麼做');
         }
+    }
+    function setRendered(){
+        View::$hasRendered = true;
+    }
+    function isRendered(){
+        return View::$hasRendered;
     }
     function set(){ //設定要使用的action template (viewTpl)
         $args = func_get_args();
