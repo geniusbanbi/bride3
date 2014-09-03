@@ -726,14 +726,6 @@ class View{
                     $global_class::beforeRenderError();
                 }
 
-                if( APP::$systemConfigs['Production']==0 ){
-                    //除錯模式下，出現ERROR PAGE應主動標示執行程序
-                    echo '<h1>Error '.$name.'</h1>';
-                    echo debugBacktrace();
-                    echo '<br><br><br><br><br>';
-                    stop_progress();
-                }
-
                 $path = 'layout_'.$layout.'/errors/'.$name.EXT;
                 $file = DIRROOT.$path;
                 if( ! file_exists($file) ){
@@ -744,6 +736,13 @@ class View{
                     include( $file );
                 }
                 
+                if( APP::$systemConfigs['Production']==0 ){
+                    //除錯模式下，出現ERROR PAGE應主動標示執行程序
+                    echo '<h1>Error '.$name.'</h1>';
+                    echo debugBacktrace();
+                    echo '<br><br><br><br><br>';
+                }
+
                 //呼叫系統的全程式終止程序
                 stop_progress();
                 

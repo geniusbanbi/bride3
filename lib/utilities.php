@@ -138,14 +138,14 @@ function readableFilesize($size) {
     return round($size, 2) . ' ' . $units[$i];
 }
 function fileext($file){
-    return pathinfo($file, PATHINFO_EXTENSION);;
+    return pathinfo($file, PATHINFO_EXTENSION);
 }
 function errmsg( $errmsg='' ){
     if( APP::$systemConfigs['Production']==1 ){
         if( ! View::isRendered() ){
             View::render('error', 500);die;
         }else{
-            die('抱歉故障了，無法繼續顯示');
+            return false; // 若 Production 且畫面已輸出，就什麼都不做
         }
     }
     
