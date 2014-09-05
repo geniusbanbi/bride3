@@ -34,7 +34,7 @@ function stop_progress(){
     markquery_report();
     marktime_report();
 
-    'APP::$loadedFiles<br>';
+    echo 'APP::$loadedFiles<br>';
     pr(APP::$loadedFiles);
     die;
 }
@@ -90,6 +90,27 @@ function str_match( $substr , $string ){
     }
     return true;
 }
+function get_user_client_ip(){
+    $ip=false;
+    if(!empty($_SERVER["HTTP_CLIENT_IP"])){
+        $ip = $_SERVER["HTTP_CLIENT_IP"];
+    }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])){
+        $ips = explode (", ", $_SERVER['HTTP_X_FORWARDED_FOR']);
+        if ($ip){
+            array_unshift($ips, $ip); $ip = FALSE;
+        }
+        $ips_levels=count($ips);
+        for ($i = 0; $i<$ips_levels; $i++){
+            if (!preg_match ('/^(10|172\.16|192\.168)\./', $ips[$i])){
+                $ip = $ips[$i];
+                break;
+            }
+        }
+    }
+    return ($ip ? $ip : $_SERVER['REMOTE_ADDR']);
+}
+
 function uc2ul( $str ){
     return ucwords2underline( $str );
 }
@@ -144,9 +165,8 @@ function errmsg( $errmsg='' ){
     if( APP::$systemConfigs['Production']==1 ){
         if( ! View::isRendered() ){
             View::render('error', 500);die;
-        }else{
-            return false; // 若 Production 且畫面已輸出，就什麼都不做
         }
+        return false; // 若 Production 且畫面已輸出，就什麼都不做
     }
     
     $backtrace=debug_backtrace();
@@ -208,7 +228,10 @@ function errorHandler($errno, $errstr, $errfile, $errline){
         return;
     }
     if( APP::$systemConfigs['Production']==1 ){
-        View::render('error', 500);
+        if( ! View::isRendered() ){
+            View::render('error', 500);die;
+        }
+        return false; // 若 Production 且畫面已輸出，就什麼都不做
     }
     
     switch ($errno) {

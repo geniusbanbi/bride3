@@ -372,6 +372,7 @@ function cache_path( $href ){
     return false;
 }
 function txturl( $href ){
+    // 有智慧的將url接上WEBROOT，產生真實網址文字的意思
     $href=trim($href);
     $href_abs=$href;
     //for empty path: imply ME

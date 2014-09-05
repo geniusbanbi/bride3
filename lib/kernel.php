@@ -44,6 +44,7 @@ class APP{
         'plugins'=>array(),
         'pears'=>array(),
         'models'=>array(),
+        'helpers'=>array(),
     ); //記錄以載入的library
     
     /* Syslog */
@@ -174,6 +175,9 @@ class APP{
             case 'model':
                 self::_loadModel( $name );
                 break;
+            case 'helper':
+                self::_loadHelper( $name );
+                break;
             default:
                 errmsg('指定的參數錯誤: TYPE: '.$type.' , NAME: '.$name.'</strong> Error.');
                 return false;
@@ -228,9 +232,21 @@ class APP{
         }
         return true;
     }
+    function _loadHelper( $name ){
+        if( ! is_string($name) ){
+            errmsg('指定的參數錯誤: <strong>必須是字串</strong>');
+            return false;
+        }
+        
+        if( ! self::FileLoader('helpers',$name) ){
+            errmsg('指定的 Helper: <strong>'.$name.'</strong> 找不到.');
+            return false;
+        }
+        return true;
+    }
     function FileLoader( $type , $name , $resource=array() ){
         
-        if( !in_array( $type , array('pears','vendors','plugins','models') ) ){
+        if( !in_array( $type , array('pears','vendors','plugins','models','helpers') ) ){
             errmsg('Given Parameters: '.$type.' Not Allowed in '.__FUNCTION__);
         }
         $basepath=DIRLIB.$type.DS;
@@ -270,6 +286,14 @@ class APP{
                     require($basepath.$modelPath);
                     //marktime(__FUNCTION__, 'Load '.ucfirst($type).' '.$name);
                     APP::$loadedFiles[ $type ][]=uc2ul($name);
+                }
+                return true;
+                break;
+            case 'helpers':
+                $basepath=View::getLayoutPath();
+                if( ! in_array( strtolower($name) , APP::$loadedFiles[$type] ) ){
+                    require($basepath.'helper.'.$name.'.'.EXT);
+                    APP::$loadedFiles[ $type ][]=strtolower($name);
                 }
                 return true;
                 break;
