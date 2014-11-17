@@ -22,12 +22,21 @@ marktime('SystemUser', 'Start');
 //清除$_GET全域陣列中的 p （rewrite所引入的路徑資料）
 unset($_GET['p']);
 //直接從系統環境取得REDIRECT_URL
-$base=dirname( getenv('SCRIPT_NAME') );
-$p=filter_var( getenv('REQUEST_URI'), FILTER_SANITIZE_URL);
-$p=urldecode( $p );
-$p=substr( $p, strlen($base) );
-if( substr($p,0,1)=='/' ) $p=substr($p,1);
+if( ! $console_mode ){
+	$base=dirname( getenv('SCRIPT_NAME') );
+	$p=filter_var( getenv('REQUEST_URI'), FILTER_SANITIZE_URL);
+	$p=urldecode( $p );
+	$p=substr( $p, strlen($base) );
 
+}else{
+	unset($console_mode);
+
+	$p='';
+	if( isset($argv[1]) && ! empty($argv[1]) ){
+	    $p=$argv[1];
+	}
+}
+if( substr($p,0,1)=='/' ) $p=substr($p,1);
 $routing_args=Routing::parse( $p );
 
 //以安全的方式重建$p
