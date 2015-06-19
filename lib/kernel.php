@@ -378,8 +378,8 @@ class Model{
     static $masterTable=''; 
     static $masterConfigs=array(); //記錄主要Model的各項設定
 
-    static $dryRun=false;
-    static $showQuery=false;
+    static $dryRun=false; // 模擬運作，不執行
+    static $showQuery=false; // 一邊運作，一邊輸出執行的程式碼
     
     function insert( $fields , $useTable='', $register_fields=array() ){
         if( ! is_array($register_fields) ){
@@ -403,8 +403,6 @@ class Model{
     	
     	$sql=sprintf("INSERT INTO ".$useTable." ( %s ) VALUES ( %s )",implode(',',$fs),implode(',',$vs));
     	
-        self::_debugShowQuery($sql);
-
     	return Model::execute($sql);
     }
     function _listFields( $fields ){
@@ -455,8 +453,6 @@ class Model{
     	
     	$sql=sprintf("INSERT INTO ".$useTable." ( %s ) VALUES %s",implode(',',$fs),implode(',',$values));
     	
-        self::_debugShowQuery($sql);
-
     	return Model::execute($sql);
     }
     function update( $fields , $identify='id' , $useTable='' , $register_fields=array() ){
@@ -524,9 +520,83 @@ class Model{
     	$sql=sprintf("UPDATE ".$useTable." SET %s WHERE %s",implode(',',$fs), implode(' AND ',$where_list) );
     	//echo $sql.'<br>';
     	//file_put_contents(DIRROOT.'sql_log.txt', $sql."\n", FILE_APPEND);
-        self::_debugShowQuery($sql);
-
     	return Model::execute($sql);
+    }
+    function updates( $fields , $identify='id' , $useTable='' , $register_fields=array() ){
+        $tmpTable = 'tmp_'.uniqid();
+        //pr($fields);die;
+        if( count($fields) < 1 ){
+            errmsg('抱歉，您必須提供寫入資料');
+        }
+
+        // 判斷需要建立的暫存表欄位
+        $table_data = array();
+        foreach( $fields as $row ){
+            $field_count = 0;
+            foreach( $row as $field_name => $field_value ){
+                $field_count += 1;
+                // 如果未設定，或大於現有值，則記錄之
+                if( ! isset($table_data[$field_name]) || (strlen($field_value) > $table_data[$field_name]) ){
+                    $table_data[$field_name] = strlen($field_value);
+                }
+            }
+        }
+        if( $field_count < 1 ){
+            errmsg('抱歉，您沒有提供寫入欄位');
+        }
+        //pr('here');die;
+        //建立暫存表批次寫入，再用JOIN兩個表的方式批次更新
+        $sql_rows = array();
+        $fs = array();
+        $sql_updates = array();
+        $sql_update_joins = array();
+        foreach( $table_data as $field_name => $field_length ){
+            $sql_rows[] = " `".$field_name."` char(".$field_length.")";
+            if( $field_name===$identify || (is_array($identify) && in_array($field_name, $identify))  ){
+                $sql_update_joins[] = " u.`".$field_name."` = t.`".$field_name."`";
+            }else{
+                $sql_updates[] = " u.`".$field_name."` = t.`".$field_name."`";
+            }
+            //過濾未出現在列表中的欄位
+            if( array_key_exists( $field_name , $register_fields ) ){
+                $fs[ $field_name ] = 'text';
+            }
+        }
+        if( count($fs) < 1 ){
+            self::_listFields( pos($rows) );
+            errmsg('沒有寫入的欄位，請檢查您的輸入，或是否尚未指定欄位註冊表 $register_fields');
+        }
+
+        $sql = "CREATE TEMPORARY TABLE ".$tmpTable." (\n";
+        $sql.= implode(", \n", $sql_rows);
+        $sql.= "\n) ENGINE = MEMORY;";
+        //pr($sql);die;
+        if( ! Model::exec($sql) ){
+            errmsg('建立暫存表失敗');
+            return false;
+        }
+
+        $inserts = $fields;
+
+        if( ! Model::inserts( $inserts, $tmpTable, $register_fields ) ){
+            errmsg('寫入暫存的更新資料時失敗');
+            return false;
+        }
+
+        $sql = "UPDATE ".$useTable." u, ".$tmpTable." t";
+        $sql.= " SET";
+        $sql.= implode(", \n", $sql_updates);
+        $sql.= " WHERE";
+        $sql.= implode(" AND ", $sql_update_joins);
+        //pr($sql);die;
+        $err = Model::exec($sql);
+
+        $sql = "DROP TABLE ".$tmpTable;
+        Model::exec($sql);
+        if( $err ){
+            return true;
+        }
+        return false;
     }
     function query($sql){
         self::_debugDryRun($sql);
@@ -721,7 +791,8 @@ class View{
     static $viewTplPath='';
     
     function render( $type='', $name='', $options=array() ){
-        //指定特定layout, ex. main: layout_main, admin: layout_admin，否則就是預設版型
+        // 指定特定layout, ex. main: layout_main, admin: layout_admin，否則就是預設版型
+        // 除了 layout 之外，其他 options 參數都會變成傳入的變數（只有template支援）
         $layout = APP::$prefix;
         if( isset($options['layout']) && ! empty($options['layout']) ){
             $layout = $options['layout'];
@@ -784,6 +855,9 @@ class View{
                 }
 
                 View::setRendered();
+
+                // 將options陣列展開為變數
+                extract($options);
 
                 include( $file );
 
