@@ -292,7 +292,7 @@ class APP{
             case 'helpers':
                 $basepath=View::getLayoutPath();
                 if( ! in_array( strtolower($name) , APP::$loadedFiles[$type] ) ){
-                    require($basepath.'helper.'.$name.'.'.EXT);
+                    require($basepath.'helper.'.$name.EXT);
                     APP::$loadedFiles[ $type ][]=strtolower($name);
                 }
                 return true;
@@ -518,7 +518,8 @@ class Model{
     	if(count($where_list)<1){ errmsg('更新基準欄位 $identify (ex.id) 不能空白'); }
     	
     	$sql=sprintf("UPDATE ".$useTable." SET %s WHERE %s",implode(',',$fs), implode(' AND ',$where_list) );
-    	//echo $sql.'<br>';
+    	//pr($sql);echo "\n\n";
+        //if( in_array('contents', $fs) ){die;}
     	//file_put_contents(DIRROOT.'sql_log.txt', $sql."\n", FILE_APPEND);
     	return Model::execute($sql);
     }
@@ -941,6 +942,9 @@ class View{
                 break;
         }
         return true;
+    }
+    function getLayoutPath(){
+        return DIRROOT.'layout_'.APP::$prefix.'/';
     }
     function getViewTplPath(){
         $viewTplPath = self::$viewTplPath;
