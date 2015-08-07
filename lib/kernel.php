@@ -570,7 +570,7 @@ class Model{
 
         $sql = "CREATE TEMPORARY TABLE ".$tmpTable." (\n";
         $sql.= implode(", \n", $sql_rows);
-        $sql.= "\n) ENGINE = MEMORY;";
+        $sql.= "\n) ENGINE = MEMORY DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
         //pr($sql);die;
         if( ! Model::exec($sql) ){
             errmsg('建立暫存表失敗');
