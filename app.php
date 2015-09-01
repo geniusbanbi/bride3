@@ -102,7 +102,8 @@ define('DEBUG', $basic['Debug']);           //0 or 1，0關閉，1開發模式�
 define('PRODUCTION', $basic['Production']); //0 or 1，0關閉，1產品模式，系統錯誤以溫柔、包裝過的方式呈現
 /* 將與APP::cacheConfigs['region']['cache']['switch']重疊比對，決定是否啟用 */
 //define('CACHE', $basic['Cache']);           //0 or 1，0關閉，1啟用快取，啟用或關閉快取
-define('TIMEOUT', $basic['Timeout']); //Session Destoryed Time, 設定整體的Session消滅時間
+$maxlifetime = strtotime($basic['Timeout']) - mktime();
+define('TIMEOUT', $maxlifetime); //Session Destoryed Time, 設定整體的Session消滅時間
 define('PAGEROWS',  $basic['Pagerows']);
 
 //檢查必要的系統資料夾
@@ -157,6 +158,7 @@ marktime( 'Core' , 'Setting ErrorHandler');
 //設定Session
 ini_set('session.save_handler', 'user');
 session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+ini_set('session.gc_maxlifetime', TIMEOUT);
 session_save_path( DIRSESSION );
 session_name('JBride');
 session_start();
