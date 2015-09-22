@@ -45,6 +45,7 @@ class APP{
         'pears'=>array(),
         'models'=>array(),
         'helpers'=>array(),
+        'behaviors'=>array(),
     ); //記錄以載入的library
     
     /* Syslog */
@@ -178,6 +179,9 @@ class APP{
             case 'helper':
                 self::_loadHelper( $name );
                 break;
+            case 'behavior':
+                self::_loadBehavior( $name );
+                break;
             default:
                 errmsg('指定的參數錯誤: TYPE: '.$type.' , NAME: '.$name.'</strong> Error.');
                 return false;
@@ -244,9 +248,21 @@ class APP{
         }
         return true;
     }
+    function _loadBehavior( $name ){
+        if( ! is_string($name) ){
+            errmsg('指定的參數錯誤: <strong>必須是字串</strong>');
+            return false;
+        }
+        
+        if( ! self::FileLoader('behaviors',$name) ){
+            errmsg('指定的 Behavior: <strong>'.$name.'</strong> 找不到.');
+            return false;
+        }
+        return true;
+    }
     function FileLoader( $type , $name , $resource=array() ){
         
-        if( !in_array( $type , array('pears','vendors','plugins','models','helpers') ) ){
+        if( !in_array( $type , array('pears','vendors','plugins','models','helpers','behaviors') ) ){
             errmsg('Given Parameters: '.$type.' Not Allowed in '.__FUNCTION__);
         }
         $basepath=DIRLIB.$type.DS;
@@ -290,9 +306,17 @@ class APP{
                 return true;
                 break;
             case 'helpers':
-                $basepath=View::getLayoutPath();
+                $basepath=DIRROOT.'model'.DS;
                 if( ! in_array( strtolower($name) , APP::$loadedFiles[$type] ) ){
                     require($basepath.'helper.'.$name.EXT);
+                    APP::$loadedFiles[ $type ][]=strtolower($name);
+                }
+                return true;
+                break;
+            case 'behaviors':
+                $basepath=DIRROOT.'model'.DS;
+                if( ! in_array( strtolower($name) , APP::$loadedFiles[$type] ) ){
+                    require($basepath.'behavior.'.$name.EXT);
                     APP::$loadedFiles[ $type ][]=strtolower($name);
                 }
                 return true;
@@ -407,13 +431,33 @@ class Model{
     }
     function _listFields( $fields ){
         //pr($fields);
+        /*  允許的格式參數及其預設值
+        var $valid_default_values = array(
+            'text'      => '',
+            'boolean'   => true,
+            'integer'   => 0,
+            'decimal'   => 0.0,
+            'float'     => 0.0,
+            'timestamp' => '1970-01-01 00:00:00',
+            'time'      => '00:00:00',
+            'date'      => '1970-01-01',
+            'clob'      => '',
+            'blob'      => '',
+        );
+        */
         if( APP::$systemConfigs['Production'] == 1 ){ return; }
         echo '<pre>';
         echo '        $register_fields=array('."\n";
         foreach( $fields as $key=>$value ){
-            if( ! is_string($value) ){ continue; }
+            //if( ! is_string($value) ){ continue; }
             $type = 'text';
-            if( preg_match('/^\d{4}-\d{2}-\d{2}/', $value) ){ $type="timestamp"; }
+            if( is_string($value) ){ $type = 'text'; }
+            elseif( preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $value) ){ $type="timestamp"; }
+            elseif( preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) ){ $type="date"; }
+            elseif( preg_match('/^\d{2}:\d{2}:\d{2}$/', $value) ){ $type="time"; }
+            elseif( is_integer($value) ){ $type='integer'; }
+            elseif( is_float($value) ){ $type='float'; }
+            elseif( is_bool($value) ){ $type='boolean'; }
             echo "            '".$key."' => '".$type."',"."\n";
         }
         echo '        );'."\n";
@@ -564,7 +608,7 @@ class Model{
             }
         }
         if( count($fs) < 1 ){
-            self::_listFields( pos($rows) );
+            self::_listFields( pos($fields) );
             errmsg('沒有寫入的欄位，請檢查您的輸入，或是否尚未指定欄位註冊表 $register_fields');
         }
 
