@@ -24,8 +24,10 @@ class MRDB{
     function query($sql){
         //for READ
         $time1=gettime();
+        //$memory1=memory_get_usage();
         $result=$this->mysql_query_slave($sql);
         $time2=gettime();
+        //$memory2=memory_get_usage();
         markquery( 'query' , $sql , $time1 , $time2 );
         return $result;
     }
@@ -35,8 +37,10 @@ class MRDB{
     function execute($sql){
         //for WRITE
         $time1=gettime();
+        //$memory1=memory_get_usage();
         $result=mysql_query($sql, $this->_link[ $this->_active_profile ]);
         $time2=gettime();
+        //$memory2=memory_get_usage();
         markquery( 'exec' , $sql , $time1 , $time2 );
         return $result;
     }

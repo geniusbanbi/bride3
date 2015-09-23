@@ -147,6 +147,11 @@ function underline2ucwords( $str ){
  * @version     0.3
  * @link        http://www.jonasjohn.de/snippets/php/readable-filesize.htm
  */
+function format_readable_filesize($size){
+    $result = readableFilesize($size);
+    list( $digit, $unit ) = explode(' ', $result);
+    return sprintf('%1.2f', $digit).' '.$unit;
+}
 function readable_filesize($size){
     return readableFilesize($size);
 }
