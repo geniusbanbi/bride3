@@ -7,34 +7,39 @@ function stop_progress(){
         //提供APP於執行期決定是否關閉訊息
         die;
     }
-    echo '<b>Cookies:</b>';
+    pr('<b>$_COOKIE:</b>');
     pr($_COOKIE);
-    echo '<b>PageBeforeLogin:</b>';
+    pr('<b>PageBeforeLogin:</b>');
     pr($_SESSION['PageBeforeLogin']);
 
     $memory_peak = memory_get_peak_usage();
     $memory_peak_readable = sprintf('%.2f', ($memory_peak / (1024*1024)) ).' MB';
-    echo "memory_get_peak_usage: ".$memory_peak_readable." (".$memory_peak.")<br>";
+    echo "memory_get_peak_usage(): ".$memory_peak_readable." (".$memory_peak.")<br>";
     /*$memory_usage = memory_get_peak_usage();
     $memory_usage_readable = sprintf('%.2f', ($memory_usage / (1024*1024)) ).' MB';
     echo "memory_get_usage: ".$memory_usage_readable." (".$memory_usage.")<br>";*/
     
     echo '<b>Routing:</b>';
+    pr('APP::$routing:');
     pr(APP::$routing);
     
     echo '<b>Layout Settings:</b>';
     ob_start();
+    pr('View::$layoutConfigs:');
     print_r(View::$layoutConfigs);
     $html = htmlspecialchars( ob_get_contents() );
     ob_end_clean();
     echo '<pre>'.str_replace('  ', '&nbsp; ', $html).'</pre>';
     
+    pr('RoutingConfigs::$parents:');
     pr(RoutingConfigs::$parents);
     //pr($pageConfig);
+    pr('markquery_report():');
     markquery_report();
+    pr('marktime_report():');
     marktime_report();
 
-    echo 'APP::$loadedFiles<br>';
+    pr('APP::$loadedFiles:');
     pr(APP::$loadedFiles);
     die;
 }
