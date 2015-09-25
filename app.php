@@ -171,10 +171,10 @@ include( '_shared_functions.php' );
 //載入網站專用自訂項目
 include( DIRROOT.'_global_functions.php' );
 //載入表單生成物件
-$_form_path = DIRROOT.'model_'.APP::$prefix.'/helper.form'.EXT;
+$_form_path = DIRROOT.'layout_'.APP::$prefix.'/helper.form'.EXT;
 if( file_exists($_form_path) ){
     //如果自訂表單存在，載入自訂版本
-    APP::load('helper', 'form');
+    include( $_form_path );
 }else{
     //否則載入預設版本（或稱範例版本）
     include( DIRLIB.'form'.EXT );
