@@ -308,7 +308,7 @@ class APP{
             case 'helpers':
                 $basepath=DIRROOT.'model_'.APP::$prefix.DS;
                 if( ! in_array( strtolower($name) , APP::$loadedFiles[$type] ) ){
-                    require($basepath.'helper.'.$name.EXT);
+                    require($basepath.'helper.'.strtolower($name).EXT);
                     APP::$loadedFiles[ $type ][]=strtolower($name);
                 }
                 return true;
@@ -316,7 +316,7 @@ class APP{
             case 'behaviors':
                 $basepath=DIRROOT.'model_'.APP::$prefix.DS;
                 if( ! in_array( strtolower($name) , APP::$loadedFiles[$type] ) ){
-                    require($basepath.'behavior.'.$name.EXT);
+                    require($basepath.'behavior.'.strtolower($name).EXT);
                     APP::$loadedFiles[ $type ][]=strtolower($name);
                 }
                 return true;
