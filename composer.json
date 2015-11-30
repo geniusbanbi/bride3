@@ -1,0 +1,14 @@
+{  
+    "_comments": {
+    	"donatj/phpuseragentparser": "話語搜尋時使用，用來分辨用戶端使用的作業系統和瀏覽器",
+    	"tedivm/jshrink": "用來壓縮JS檔或一些靜態檔案",
+    	"mobiledetect/mobiledetectlib": "Mobile_Detect 偵測用戶端的裝置類型",
+    	"piwik/device-detector": "判斷並顯示用戶端的裝置類型"
+    },
+    "require": {  
+        "donatj/phpuseragentparser": "*",
+ 		"tedivm/jshrink": "~1.0",
+ 		"mobiledetect/mobiledetectlib": "^2.8",
+ 		"piwik/device-detector": "3.4.*"
+    }  
+}

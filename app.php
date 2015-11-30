@@ -82,6 +82,9 @@ marktime( 'Core' , 'Loading Libs');
 include( DIRCONFIG.'config.php' );
 include( DIRCONFIG.'databases.php' );
 
+// 自動載入核心內的composer套件相依性管理工具提供的項目
+require( BASEROOT.'vendor/autoload.php' );
+
 marktime( 'Core' , 'Loading Configs');
 
 //儲存routing分析結果
