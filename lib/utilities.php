@@ -171,6 +171,17 @@ function readableFilesize($size) {
 function fileext($file){
     return pathinfo($file, PATHINFO_EXTENSION);
 }
+function popup( $errmsg='' ){
+    // 做為前端 AJAX 回應錯誤的快速工具
+    echo '<pre>';
+    print_r($var);
+    echo '</pre>';
+
+    if( APP::$systemConfigs['Production']==1 ) return ;
+
+    echo "\n\n".'@ '.__CLASS__.'::'.__FUNCTION__.' Line:'.__LINE__.' (Dev. Only)';
+
+}
 function errmsg( $errmsg='' ){
     if( APP::$systemConfigs['Production']==1 ){
         if( ! View::isRendered() ){
