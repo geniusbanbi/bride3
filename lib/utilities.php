@@ -173,14 +173,19 @@ function fileext($file){
 }
 function popup( $errmsg='' ){
     // 做為前端 AJAX 回應錯誤的快速工具
+    if( APP::$systemConfigs['Production']==0 ){
+        $backtrace=debug_backtrace();
+        array_shift($backtrace);
+        $prev = pos($backtrace);
+
+        $class = $prev['class'];
+        if( empty($class) ){ $class=basename($prev['file']); }
+        $errmsg .= "\n\n".'(Dev. Only)'."\n".'@ '.$class.'::'.$prev['function'].'() Line:'.$prev['line'];
+    }
+
     echo '<pre>';
-    print_r($var);
+    print_r($errmsg);
     echo '</pre>';
-
-    if( APP::$systemConfigs['Production']==1 ) return ;
-
-    echo "\n\n".'@ '.__CLASS__.'::'.__FUNCTION__.' Line:'.__LINE__.' (Dev. Only)';
-
 }
 function errmsg( $errmsg='' ){
     if( APP::$systemConfigs['Production']==1 ){
