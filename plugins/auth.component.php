@@ -10,7 +10,7 @@ class AuthComponent{
         'saltCol' => 'salt',
         'isActiveCol' => 'is_actived',
         'isActiveAllowed' => '1',
-        'deletedCol' => 'deleted',
+        'deletedCol' => 'is_deleted',
         'deletedAllowed' => '0',
         'db_fields' => '*',
     );
