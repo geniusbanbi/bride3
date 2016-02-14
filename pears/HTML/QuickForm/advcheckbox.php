@@ -16,9 +16,9 @@
  * @package     HTML_QuickForm
  * @author      Jason Rust <jrust@php.net>
  * @author      Alexey Borzov <avb@php.net>
- * @copyright   2001-2007 The PHP Group
+ * @copyright   2001-2011 The PHP Group
  * @license     http://www.php.net/license/3_01.txt PHP License 3.01
- * @version     CVS: $Id: advcheckbox.php,v 1.17 2007/05/29 18:34:36 avb Exp $
+ * @version     CVS: $Id$
  * @link        http://pear.php.net/package/HTML_QuickForm
  */
 
@@ -46,7 +46,7 @@ require_once 'HTML/QuickForm/checkbox.php';
  * @package     HTML_QuickForm
  * @author      Jason Rust <jrust@php.net>
  * @author      Alexey Borzov <avb@php.net>
- * @version     Release: 3.2.10
+ * @version     Release: 3.2.14
  * @since       2.0
  */
 class HTML_QuickForm_advcheckbox extends HTML_QuickForm_checkbox
@@ -271,7 +271,7 @@ class HTML_QuickForm_advcheckbox extends HTML_QuickForm_checkbox
     * This element has a value even if it is not checked, thus we override
     * checkbox's behaviour here
     */
-    function exportValue(&$submitValues, $assoc)
+    function exportValue(&$submitValues, $assoc = false)
     {
         $value = $this->_findValue($submitValues);
         if (null === $value) {

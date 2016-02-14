@@ -17,9 +17,9 @@
  * @author      Adam Daniel <adaniel1@eesus.jnj.com>
  * @author      Bertrand Mansion <bmansion@mamasam.com>
  * @author      Alexey Borzov <avb@php.net>
- * @copyright   2001-2007 The PHP Group
+ * @copyright   2001-2011 The PHP Group
  * @license     http://www.php.net/license/3_01.txt PHP License 3.01
- * @version     CVS: $Id: file.php,v 1.24 2007/10/05 10:17:55 avb Exp $
+ * @version     CVS: $Id$
  * @link        http://pear.php.net/package/HTML_QuickForm
  */
 
@@ -44,7 +44,7 @@ if (class_exists('HTML_QuickForm')) {
  * @author      Adam Daniel <adaniel1@eesus.jnj.com>
  * @author      Bertrand Mansion <bmansion@mamasam.com>
  * @author      Alexey Borzov <avb@php.net>
- * @version     Release: 3.2.10
+ * @version     Release: 3.2.14
  * @since       1.0
  */
 class HTML_QuickForm_file extends HTML_QuickForm_input
@@ -319,10 +319,12 @@ class HTML_QuickForm_file extends HTML_QuickForm_input
     * Needs to be redefined here as $_FILES is populated differently from 
     * other arrays when element name is of the form foo[bar]
     * 
+    * @param bool $sc1   unused, for signature compatibility
+    *
     * @access    private
     * @return    mixed
     */
-    function _findValue()
+    function _findValue(&$sc1 = null)
     {
         if (empty($_FILES)) {
             return null;

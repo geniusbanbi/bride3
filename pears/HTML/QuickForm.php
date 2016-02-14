@@ -17,9 +17,9 @@
  * @author      Adam Daniel <adaniel1@eesus.jnj.com>
  * @author      Bertrand Mansion <bmansion@mamasam.com>
  * @author      Alexey Borzov <avb@php.net>
- * @copyright   2001-2007 The PHP Group
+ * @copyright   2001-2011 The PHP Group
  * @license     http://www.php.net/license/3_01.txt PHP License 3.01
- * @version     CVS: $Id: QuickForm.php,v 1.164 2007/10/05 19:57:32 avb Exp $
+ * @version     CVS: $Id$
  * @link        http://pear.php.net/package/HTML_QuickForm
  */
 
@@ -119,7 +119,7 @@ define('QUICKFORM_INVALID_DATASOURCE',     -9);
  * @author      Adam Daniel <adaniel1@eesus.jnj.com>
  * @author      Bertrand Mansion <bmansion@mamasam.com>
  * @author      Alexey Borzov <avb@php.net>
- * @version     Release: 3.2.10
+ * @version     Release: 3.2.14
  */
 class HTML_QuickForm extends HTML_Common
 {
@@ -163,7 +163,7 @@ class HTML_QuickForm extends HTML_Common
      * @var  string
      * @access   public
      */ 
-    var $_jsPrefix = '以下欄位輸入有誤';
+    var $_jsPrefix = 'Invalid information entered.';
 
     /**
      * Postfix message in javascript alert if error
@@ -171,7 +171,7 @@ class HTML_QuickForm extends HTML_Common
      * @var  string
      * @access   public
      */ 
-    var $_jsPostfix = '請更正以上欄位';
+    var $_jsPostfix = 'Please correct these fields.';
 
     /**
      * Datasource object implementing the informal
@@ -259,7 +259,7 @@ class HTML_QuickForm extends HTML_Common
      * @since     1.0
      * @access    private
      */
-    var $_requiredNote = '<span style="font-size:80%; color:#ff0000;">*</span><span style="font-size:80%;"> 必填欄位</span>';
+    var $_requiredNote = '<span style="font-size:80%; color:#ff0000;">*</span><span style="font-size:80%;"> denotes required field</span>';
 
     /**
      * Whether the form was submitted
@@ -983,7 +983,7 @@ class HTML_QuickForm extends HTML_Common
     function updateElementAttr($elements, $attrs)
     {
         if (is_string($elements)) {
-            $elements = split('[ ]?,[ ]?', $elements);
+            $elements = preg_split('/[ ]?,[ ]?/', $elements);
         }
         foreach (array_keys($elements) as $key) {
             if (is_object($elements[$key]) && is_a($elements[$key], 'HTML_QuickForm_element')) {
@@ -1030,7 +1030,13 @@ class HTML_QuickForm extends HTML_Common
             $this->_elementIndex[$elementName] = array_shift($this->_duplicateIndex[$elementName]);
         }
         if ($removeRules) {
+            $this->_required = array_diff($this->_required, array($elementName));
             unset($this->_rules[$elementName], $this->_errors[$elementName]);
+            if ('group' == $el->getType()) {
+                foreach (array_keys($el->getElements()) as $key) {
+                    unset($this->_rules[$el->getElementName($key)]);
+                }
+            }
         }
         return $el;
     } // end func removeElement
@@ -1810,8 +1816,8 @@ class HTML_QuickForm extends HTML_Common
                 "  _qfMsg = '';\n\n" .
                 join("\n", $test) .
                 "\n  if (_qfMsg != '') {\n" .
-                "    _qfMsg = '" . strtr($this->_jsPrefix, $js_escape) . "\\n' + _qfMsg;\n" .
-                "    _qfMsg = _qfMsg + '\\n\\n" . strtr($this->_jsPostfix, $js_escape) . "';\n" .
+                "    _qfMsg = '" . strtr($this->_jsPrefix, $js_escape) . "' + _qfMsg;\n" .
+                "    _qfMsg = _qfMsg + '\\n" . strtr($this->_jsPostfix, $js_escape) . "';\n" .
                 "    alert(_qfMsg);\n" .
                 "    return false;\n" .
                 "  }\n" .
@@ -2021,7 +2027,7 @@ class HTML_QuickForm extends HTML_Common
  * @package     HTML_QuickForm
  * @author      Adam Daniel <adaniel1@eesus.jnj.com>
  * @author      Bertrand Mansion <bmansion@mamasam.com>
- * @version     Release: 3.2.10
+ * @version     Release: 3.2.14
  */
 class HTML_QuickForm_Error extends PEAR_Error {
 
