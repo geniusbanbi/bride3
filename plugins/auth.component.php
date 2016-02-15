@@ -20,10 +20,30 @@ class AuthComponent{
     function __call($name, $arguments) {
     }
     function login( $username , $password , $autologin=false ){
+
+        // 驗證密碼
+        if( ! $userdata = self::examinePassword( $username , $password , $autologin ) ){
+            return false;
+        }
+        
+        // When Verify Passed, go throuth here.
+        $userdata = self::$AuthData;
+        $encrypt = self::$encryptPassword;
+        
+        $sql ='UPDATE '.self::$params['table'];
+        $sql.=' SET last_login='.APP::$mdb->quote( date('Y-m-d H:i:s'), 'date');
+        $sql.=' , last_login_ip='.APP::$mdb->quote( self::getUserClientIP() , 'text');
+        $sql.=' WHERE id = '.APP::$mdb->quote( $userdata['id'], 'text' );
+        APP::$mdb->exec($sql);
+        
+        return true;
+    }
+    function examinePassword( $username , $password , $autologin=false ){
         if( is_string(self::$params['db_fields']) ){
             self::$params['db_fields']=array(self::$params['db_fields']);
         }
-        
+
+        // 驗證密碼，確認用戶輸入的密碼正確
         $sql ="SELECT ".implode(',', self::$params['db_fields'])." FROM ".self::$params['table'];
         $sql.=" WHERE ".self::$params['isActiveCol']."=".APP::$mdb->quote(self::$params['isActiveAllowed'],'text');
         $sql.=" AND ".self::$params['deletedCol']."=".APP::$mdb->quote(self::$params['deletedAllowed'],'text');
@@ -60,16 +80,9 @@ class AuthComponent{
                 return false;
             }
         }
-        
-        // When Verify Passed, go throuth here.
+        // 將資料存入快取，以預備於執行期間讀取
         self::$AuthData = $userdata;
         self::$encryptPassword = $encrypt;
-        
-        $sql ='UPDATE '.self::$params['table'];
-        $sql.=' SET last_login='.APP::$mdb->quote( date('Y-m-d H:i:s'), 'date');
-        $sql.=' , last_login_ip='.APP::$mdb->quote( self::getUserClientIP() , 'text');
-        $sql.=' WHERE id = '.APP::$mdb->quote( $userdata['id'], 'text' );
-        APP::$mdb->exec($sql);
         
         return true;
     }
