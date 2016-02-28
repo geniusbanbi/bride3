@@ -22,8 +22,8 @@ function redirect_message(){
     }
     return $RedirectMSG;
 }
-function redirect( $href , $message='' , $message_template='' ){
-    $url=url($href);
+function message( $url, $message='' , $message_template='' ){
+    // 對指定頁面傳遞訊息
     if( !empty($message) ){
         if( !empty($message_template) ){
             $template = 'notice_'.$message_template;
@@ -39,6 +39,14 @@ function redirect( $href , $message='' , $message_template='' ){
             );
         }
     }
+
+    return true;
+}
+function redirect( $href , $message='' , $message_template='' ){
+    $url=url($href);
+
+    message( $url, $message, $message_template );
+
     //pr(headers_list());die;
     if( count($_POST)>0 ){
         $delay=1;
