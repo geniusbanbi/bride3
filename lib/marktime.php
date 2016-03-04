@@ -57,6 +57,8 @@ function marktime_filesize($size){
     return sprintf('%.2f', ($size / (1024)) ).' KB';
 }
 function markquery( $type , $sql , $time1 , $time2 ){
+    //$backtrace=debug_backtrace();
+    //MT::$queries[]=array( 'type'=>ucfirst($type) , 'sql'=>$sql , 'time'=>($time2-$time1) , 'backtrace'=>$backtrace );
     MT::$queries[]=array( 'type'=>ucfirst($type) , 'sql'=>$sql , 'time'=>($time2-$time1) );
 }
 function markquery_report(){
@@ -69,6 +71,7 @@ function markquery_report(){
     echo '<th width="70px"><i>#</i></th>';
     echo '<th width="70px">Type</th>';
     echo '<th>SQL</th>';
+//echo '<th></th>'; // for backtrace mode
     echo '<th width="100px">Time</th>';
     //echo '<th width="100px">Memory</th>';
     echo '</tr>';
@@ -78,6 +81,7 @@ function markquery_report(){
         echo '<td><i>SQL '.($k).'. </i></td>';
         echo '<td>'.$data['type'].'</td>';
         echo '<td>'.$data['sql'].'</td>';
+//echo '<td><pre>'.print_r($data['backtrace']).'</pre></td>'; // for backtrace mode
         echo '<td>'.sprintf('%01.4f',$data['time']).' ms</td>';
         //echo '<td>'.marktime_filesize($data['memory']).'</td>';
         echo '</tr>';
