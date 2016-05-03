@@ -135,6 +135,7 @@ if( file_exists($locale) ){
     require( $locale );
 }
 
+// layout 設定表
 $_default = array(
     'http_metas'=>array(),
     'sitename'=>'',
@@ -146,9 +147,20 @@ $_default = array(
     'footers'=>array(),
 );
 include( DIRCONFIG.'layouts'.EXT );
-$_default = array_merge( $_default , APP::$layoutsConfigs['default'] );
+// 設定預設值
+$_default_config = array();
+if( isset(APP::$layoutsConfigs['default']) ){
+    $_default_config = APP::$layoutsConfigs['default'];
+}
+$_default_config = array_merge( $_default , $_default_config );
+
+// 取得分區layout設定表
 $prefix=APP::$routing['prefix'];
-View::$layoutConfigs = array_merge( $_default , APP::$layoutsConfigs[ $prefix ] );
+$layout_config = array();
+if( isset(APP::$layoutsConfigs[ $prefix ]) ){
+    $layout_config = APP::$layoutsConfigs[ $prefix ];
+}
+View::$layoutConfigs = array_merge( $_default_config , $layout_config );
 
 
 marktime( 'Core' , 'Parse Layout Configs');
@@ -198,7 +210,6 @@ if( file_exists($preload) ){
     //除了main區域允許沒有 _main_functions.php 之外
     //其他區域 (ex. admin) 都必須要擁有 _{prefix}_functions.php ex. _admin_functions.php
     //這是為了安全性考量，避免此檔毀損或遺失時門戶大開卻難以察覺
-    
     if( APP::$prefix !== 'main' ){
         errmsg('找不到必要的 _'.APP::$prefix.'_functions.php 檔案，禁止存取');
     }
@@ -208,7 +219,7 @@ $_app_path = DIRROOT.APP::$handler.EXT;
 if( file_exists($_app_path) ){
     require( $_app_path );
 }else{
-    errmsg('找不到執行程式');
+    errmsg('找不到執行程式: '.basename($_app_path) );
 }
 
 
