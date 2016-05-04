@@ -95,7 +95,10 @@ class Routing{
         $routingTable = RoutingConfigs::$apps[ $prefix ];
         foreach( $routingTable as $path=>$config ){
             if( ! empty($path) ){
-                RoutingConfigs::$maps[ $config['name'] ][ $path ] = $config['parents'];
+                RoutingConfigs::$maps[ $config['name'] ][ $path ] = '';
+                if( isset($config['parents']) ){
+                    RoutingConfigs::$maps[ $config['name'] ][ $path ] = $config['parents'];
+                }
                 RoutingConfigs::$r_maps[ $path ] = $config['name'];
             }
             
