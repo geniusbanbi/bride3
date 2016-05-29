@@ -27,7 +27,7 @@ class APP{
     static $handler=''; //紀錄本次執行，總管負責的程式名稱（不含.php）
     static $app='';     //app (controller) 的名稱
     static $doctype=''; //副檔名格式
-    static $appBuffer=''; //action執行完畢的結果回傳
+    static $appBuffer=array(); //action執行完畢的結果回傳
     static $p=''; //傳入的URL
     static $ME=''; //傳入的URL，排除GET字串
     
@@ -43,6 +43,7 @@ class APP{
         'vendors'=>array(),
         'plugins'=>array(),
         'pears'=>array(),
+        'controllers'=>array(),
         'models'=>array(),
         'helpers'=>array(),
         'behaviors'=>array(),
@@ -159,6 +160,25 @@ class APP{
     	if(MRDB::isError())
     		errmsg('Syslog Error');
     }
+    function pass(){
+        // 傳遞變數至 APP::$appBuffer 的標準函式
+        $args = func_get_args();
+        
+        if( count($args) < 1 ){
+            errmsg('必須傳入至少1個參數');
+        }
+        if( count($args) === 1 ){
+            $args = (array)$args[0];
+        }
+        $buffers = (array)APP::$appBuffer;
+        $buffers = array_merge( $buffers, $args );
+        
+        APP::$appBuffer = $buffers;
+    }
+    function take(){
+        // 取出 APP::$appBuffer 內容的標準函式
+        return APP::$appBuffer;
+    }
     function load( $type , $name='' ){
         $msg=$name;
         if( empty($msg) ) $msg='current';
@@ -172,6 +192,9 @@ class APP{
                 break;
             case 'plugin':
                 self::_loadPlugin( $name );
+                break;
+            case 'controller':
+                self::_loadController( $name );
                 break;
             case 'model':
                 self::_loadModel( $name );
@@ -224,6 +247,18 @@ class APP{
         }
         return true;
     }
+    function _loadController( $name ){
+        if( ! is_string($name) ){
+            errmsg('指定的參數錯誤: <strong>必須是字串</strong>');
+            return false;
+        }
+        
+        if( ! self::FileLoader('controllers',$name) ){
+            errmsg('指定的 Controller: <strong>'.$name.'</strong> 找不到.');
+            return false;
+        }
+        return true;
+    }
     function _loadModel( $name ){
         if( ! is_string($name) ){
             errmsg('指定的參數錯誤: <strong>必須是字串</strong>');
@@ -262,7 +297,7 @@ class APP{
     }
     function FileLoader( $type , $name , $resource=array() ){
         
-        if( !in_array( $type , array('pears','vendors','plugins','models','helpers','behaviors') ) ){
+        if( !in_array( $type , array('pears','vendors','plugins','controllers','models','helpers','behaviors') ) ){
             errmsg('Given Parameters: '.$type.' Not Allowed in '.__FUNCTION__);
         }
         $basepath=DIRLIB.$type.DS;
@@ -291,6 +326,17 @@ class APP{
                     require($basepath.$name.EXT);
                     //marktime(__FUNCTION__, 'Load '.ucfirst($type).' '.$name);
                     APP::$loadedFiles[ $type ][]=strtolower($name);
+                }
+                return true;
+                break;
+            case 'controllers':
+                $basepath=DIRROOT;
+                if( ! in_array( uc2ul($name) , APP::$loadedFiles[$type] ) ){
+                    $modelPath = uc2ul($name).'_controller'.EXT;
+                    if( APP::$prefix!='main' ){ $modelPath = APP::$prefix.'#'.$modelPath; }
+                    require($basepath.$modelPath);
+                    //marktime(__FUNCTION__, 'Load '.ucfirst($type).' '.$name);
+                    APP::$loadedFiles[ $type ][]=uc2ul($name);
                 }
                 return true;
                 break;
