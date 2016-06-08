@@ -27,7 +27,7 @@ function message( $url, $message='' , $message_template='' ){
     if( !empty($message) ){
         if( !empty($message_template) ){
             $template = 'notice_'.$message_template;
-            $msg = RenderRedirectMSG( $message , $template );
+            $msg = _renderRedirectMSG( $message , $template );
             $_SESSION['Redirect'][$url]=array(
                 'timeout' => strtotime('+1 min'),
                 'message' => $msg,
@@ -42,6 +42,17 @@ function message( $url, $message='' , $message_template='' ){
 
     return true;
 }
+function _renderRedirectMSG( $message , $layout_name ){
+    
+    $layoutpath = DIRROOT. 'layout_'.APP::$prefix.DS.$layout_name.'.html'.EXT;
+    ob_start();
+    require( $layoutpath );
+    $contents=ob_get_contents();
+    ob_end_clean();
+    
+    return $contents;
+}
+
 function redirect( $href , $message='' , $message_template='' ){
     $url=url($href);
 
@@ -50,7 +61,7 @@ function redirect( $href , $message='' , $message_template='' ){
     //pr(headers_list());die;
     if( count($_POST)>0 ){
         $delay=1;
-        $waitimg=layout_url('admin', 'loading.gif');
+        $waitimg=layout_url(APP::$prefix, 'loading.gif');
         $redirectMiddlePage=<<<EOF
 <html>
 <head>
