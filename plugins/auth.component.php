@@ -63,6 +63,15 @@ class AuthComponent{
         if( empty($userdata['algorithm']) || empty($userdata['salt']) || empty($userdata['password']) ){
             return false;
         }
+
+        // 檢查帳號是否超過逾期時間，若超過也拒絕驗證成功
+        if( $userdata['expired'] !== '0000-00-00 00:00:00' ){
+            $expired = strtotime($userdata['expired']);
+            if( $expired < time() ){
+                return false;
+            }
+        }
+
         $userid=$userdata['id'];
         $algorithm=$userdata['algorithm'];
         $salt=$userdata['salt'];
