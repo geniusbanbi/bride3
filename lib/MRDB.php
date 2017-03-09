@@ -17,17 +17,28 @@ class MRDB{
         $encoding=$profile['encoding'];
         //pr($profile);die;
         
-        $this->_link[ $name ] = mysql_connect( $host, $username, $password );
-        mysql_query('SET NAMES '.$encoding , $this->_link[ $name ] ); 
-        mysql_select_db($dbname, $this->_link[ $name ]) or errmsg("Could Not Select Database.");
+        $dsn = "mysql:host=".$hostname.";dbname=".$dbname;
+        $options = array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8");
+        try {
+            $dbh = new PDO($dsn, $username, $password, $options);
+            $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            errmsg('Connection failed: ' . $e->getMessage());
+        }
+
+        $this->_link[ $name ] = $dbh;
+
+        //$this->_link[ $name ] = mysql_connect( $host, $username, $password );
+        //mysql_query('SET NAMES '.$encoding , $this->_link[ $name ] ); 
+        //mysql_select_db($dbname, $this->_link[ $name ]) or errmsg("Could Not Select Database.");
     }
     function query($sql){
         //for READ
         $time1=gettime();
-        //$memory1=memory_get_usage();
-        $result=$this->mysql_query_slave($sql);
+
+        $result=$this->querySlave($sql);
         $time2=gettime();
-        //$memory2=memory_get_usage();
+
         markquery( 'query' , $sql , $time1 , $time2 );
         return $result;
     }
@@ -38,35 +49,45 @@ class MRDB{
         //for WRITE
         $time1=gettime();
         //$memory1=memory_get_usage();
-        $result=mysql_query($sql, $this->_link[ $this->_active_profile ]);
+        $dbh = $this->_link[ $this->_active_profile ];
+
+        $sth = $dbh->prepare($sql);
+        $result = $sth->execute();
+        if( $this->isError() ){
+            $errInfo = $this->errorInfo();
+            errmsg( 'Exec Error: ['.$errInfo['1'].'] '.$errInfo['2'] );
+        }
+
         $time2=gettime();
         //$memory2=memory_get_usage();
         markquery( 'exec' , $sql , $time1 , $time2 );
         return $result;
     }
     function numRows( $result ){
-        return mysql_num_rows($result);
+        return $result->rowCount();
     }
     function fetchAll( $result ){
         $rows=array();
-        while( $r=mysql_fetch_assoc($result) ){
-            $rows[]=$r;
+        while( $r = $result->fetch(PDO::FETCH_ASSOC) ){
+            $rows[] = $r;
         }
         return $rows;
     }
     function fetchRow( $result ){
-        $r=mysql_fetch_assoc($result);
+        $r = $result->fetch(PDO::FETCH_ASSOC);
         return $r;
     }
     function fetchOne( $result ){
-        $r=mysql_fetch_row($result);
-        return $r[0];
+        return $result->fetchColumn(PDO::FETCH_ASSOC);
     }
-    function mysql_query_slave($sql){
+    function querySlave($sql){
         //預備給Load Balance資料庫使用
-        $res = mysql_query($sql, $this->_link[ $this->_active_profile ]);
-        if( $error=$this->isError ){
-            errmsg( $error );
+        $dbh = $this->_link[ $this->_active_profile ];
+
+        $res = $dbh->query($sql);
+        if( $this->isError() ){
+            $errInfo = $this->errorInfo();
+            errmsg( 'Query Error: ['.$errInfo['1'].'] '.$errInfo['2'] );
         }
         return $res;
     }
@@ -128,7 +149,9 @@ class MRDB{
         return $value;
     }
     function escape($text){
-        return mysql_real_escape_string($text, $this->_link[ $this->_active_profile ] );
+        $dbh = $this->_link[ $this->_active_profile ];
+
+        return substr($dbh->quote($text), 1, -1);
     }
     /**
      * Convert a text value into a DBMS specific format that is suitable to
@@ -430,7 +453,14 @@ class MRDB{
         return $value;
     }
     function isError(){
-        return mysql_errno();
+        $dbh = $this->_link[ $this->_active_profile ];
+
+        return $dbh->errorCode() != '00000';
+    }
+    function errorInfo(){
+        $dbh = $this->_link[ $this->_active_profile ];
+
+        return $dbh->errorInfo();
     }
 }
 ?>

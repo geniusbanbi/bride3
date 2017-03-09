@@ -172,7 +172,20 @@ marktime( 'Core' , 'Setting ErrorHandler');
 
 //設定Session
 ini_set('session.save_handler', 'user');
-session_set_save_handler('sess_open', 'sess_close', 'sess_read', 'sess_write', 'sess_destroy', 'sess_gc');
+
+$handler = new UTSessionHandler();
+session_set_save_handler(
+    array($handler, 'open'),
+    array($handler, 'close'),
+    array($handler, 'read'),
+    array($handler, 'write'),
+    array($handler, 'destroy'),
+    array($handler, 'gc')
+    );
+
+// the following prevents unexpected effects when using objects as save handlers
+register_shutdown_function('session_write_close');
+
 ini_set('session.gc_maxlifetime', TIMEOUT);
 session_save_path( DIRSESSION );
 session_name('JBride');

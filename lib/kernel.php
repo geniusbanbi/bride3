@@ -157,8 +157,9 @@ class APP{
     	
     	echo $sql;exit();
     	$res=APP::$mdb->exec($sql);
-    	if(MRDB::isError())
+    	if( APP::$mdb->isError() ){
     		errmsg('Syslog Error');
+        }
     }
     function pass(){
         // 傳遞變數至 APP::$appBuffer 的標準函式
@@ -845,9 +846,8 @@ class Model{
         echo '<META CONTENT="text/html; charset=utf-8" HTTP-EQUIV="Content-Type">';
         $backtrace=debug_backtrace();
         $err=$backtrace[1];
-        $_link=& APP::$mdb->_link[ APP::$mdb->_active_profile ];
 
-        if( mysql_errno($_link) == 0 ){ return; }
+        if( ! APP::$mdb->isError() ){ return; }
         
         $msg ='<p style="font-size:15px;color:black;font-weight:normal;"><b>'.$err['file'].' Line '.$err['line'].'</b></p>';
         $msg.='<p style="font-size:13px;color:black;font-weight:normal;"><b>'.$err['class'].'::'.$err['function'].'() Complain:</p>';
