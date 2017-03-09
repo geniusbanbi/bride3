@@ -393,12 +393,12 @@ class Inflector{
 	}
 }
 
-class String{
+class UT_String{
 /**
  * Replaces variable placeholders inside a $str with any given $data. Each key in the $data array corresponds to a variable
  * placeholder name in $str. Example:
  *
- * Sample: String::insert('My name is :name and I am :age years old.', array('name' => 'Bob', '65'));
+ * Sample: UT_String::insert('My name is :name and I am :age years old.', array('name' => 'Bob', '65'));
  * Returns: My name is Bob and I am 65 years old.
  *
  * Available $options are:
@@ -406,7 +406,7 @@ class String{
  * 	after: The character or string after the name of the variable placeholder (Defaults to null)
  * 	escape: The character or string used to escape the before character / string (Defaults to '\')
  * 	format: A regex to use for matching variable placeholders. Default is: '/(?<!\\)\:%s/' (Overwrites before, after, breaks escape / clean)
- * 	clean: A boolean or array with instructions for String::cleanInsert
+ * 	clean: A boolean or array with instructions for UT_String::cleanInsert
  *
  * @param string $str A string containing variable placeholders
  * @param string $data A key => val array where each key stands for a placeholder variable name to be replaced with val
@@ -462,7 +462,7 @@ class String{
 		if (!$options['clean']) {
 			return $str;
 		}
-		return String::cleanInsert($str, $options);
+		return UT_String::cleanInsert($str, $options);
 	}
 /**
  * Cleans up a Set::insert formated string with given $options depending on the 'clean' key in $options. The default method used is
@@ -502,7 +502,7 @@ class String{
 				$str = preg_replace($kleenex, $clean['replacement'], $str);
 				if ($clean['andText']) {
 					$options['clean'] = array('method' => 'text');
-					$str = String::cleanInsert($str, $options);
+					$str = UT_String::cleanInsert($str, $options);
 				}
 				break;
 			case 'text':
