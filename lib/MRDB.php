@@ -51,8 +51,9 @@ class MRDB{
         //$memory1=memory_get_usage();
         $dbh = $this->_link[ $this->_active_profile ];
 
-        $sth = $dbh->prepare($sql);
-        $result = $sth->execute();
+        //$sth = $dbh->prepare($sql);
+        //$result = $sth->execute();
+        $result = $dbh->query($sql);
         if( $this->isError() ){
             $errInfo = $this->errorInfo();
             errmsg( 'Exec Error: ['.$errInfo['1'].'] '.$errInfo['2'] );
