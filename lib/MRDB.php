@@ -78,7 +78,7 @@ class MRDB{
         return $r;
     }
     function fetchOne( $result ){
-        return $result->fetchColumn(PDO::FETCH_ASSOC);
+        return $result->fetchColumn();
     }
     function querySlave($sql){
         //預備給Load Balance資料庫使用
@@ -187,9 +187,9 @@ class MRDB{
             return $value;
         }
 
-        $value = $this->escape($value);
+        $dbh = $this->_link[ $this->_active_profile ];
 
-        return "'".$value."'";
+        return $dbh->quote($value);
     }
 
     // }}}
