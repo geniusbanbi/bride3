@@ -22,7 +22,7 @@ marktime('SystemUser', 'Start');
 //清除$_GET全域陣列中的 p （rewrite所引入的路徑資料）
 unset($_GET['p']);
 //直接從系統環境取得REDIRECT_URL
-if( ! $console_mode ){
+if( ! isset($console_mode) || ! $console_mode ){
 	$base=dirname( getenv('SCRIPT_NAME') );
 	$p=filter_var( getenv('REQUEST_URI'), FILTER_SANITIZE_URL);
 	$p=urldecode( $p );

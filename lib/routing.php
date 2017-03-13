@@ -1,7 +1,7 @@
 <?php
 include( $my_base.'/config/routing.php');
 class Routing{
-    function parse( $p ){
+    static function parse( $p ){
         $sitekey=self::getSiteKey();
         
         $localeDefault='';
@@ -151,6 +151,7 @@ class Routing{
         $app='';
         $app_path='';
         $path_vars=array();
+        $matches=array();
         foreach( $routingTable as $path=>$config ){
             //一般路由
             if( $path.'/' === substr($p_app, 0, strlen($path)+1) ){
@@ -281,7 +282,7 @@ class Routing{
         );
         
     }
-    function getSiteKey(){
+    static function getSiteKey(){
         global $my_base;
         
         //取得網站代號
