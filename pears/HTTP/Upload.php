@@ -258,9 +258,15 @@ class HTTP_Upload_Error extends PEAR
      * @return   object PEAR_Error   a PEAR-Error object
      * @access   public
      */
-    function raiseError($e_code)
+    static function raiseError($message = null,
+                         $code = null,
+                         $mode = null,
+                         $options = null,
+                         $userinfo = null,
+                         $error_class = null,
+                         $skipmsg = false)
     {
-        return PEAR::raiseError($this->errorCode($e_code), $e_code);
+        return PEAR::raiseError($this->errorCode($code), $code);
     }
 }
 
