@@ -77,7 +77,11 @@ class HTTP_Upload_Error extends PEAR
      * @param string $lang The language selected for error code messages
      * @access public
      */
-    function HTTP_Upload_Error($lang = null, $html = false)
+    public function HTTP_Upload_Error($lang = null, $html = false)
+    {
+        self::__construct($lang = null, $html = false);
+    }
+    function __construct($lang = null, $html = false)
     {
         $this->lang = ($lang !== null) ? $lang : $this->lang;
         $this->html = ($html !== false) ? $html : $this->html;
@@ -293,7 +297,10 @@ class HTTP_Upload extends HTTP_Upload_Error
      * @see Upload_Error::error_codes
      * @access public
      */
-    function HTTP_Upload($lang = null)
+    function HTTP_Upload($lang = null){
+        self::__construst($lang);
+    }
+    function __construst($lang = null)
     {
         $this->HTTP_Upload_Error($lang);
         if (function_exists('version_compare') &&
@@ -557,6 +564,14 @@ class HTTP_Upload_File extends HTTP_Upload_Error
                               $type = null, $size = null, $error = null, 
                               $lang = null, $chmod = HTTP_UPLOAD_DEFAULT_CHMOD)
     {
+        self::__construst($name, $tmp,  $formname,
+                              $type, $size, $error,
+                              $lang, $chmod);
+    }
+    function __construst($name = null, $tmp = null,  $formname = null,
+                              $type = null, $size = null, $error = null, 
+                              $lang = null, $chmod = HTTP_UPLOAD_DEFAULT_CHMOD)
+    {
         $this->HTTP_Upload_Error($lang);
         $ext = null;
 
@@ -704,7 +719,7 @@ class HTTP_Upload_File extends HTTP_Upload_Error
      *              because the file excess the max permitted file size)
      * @access public
      */
-    function isError()
+    static function isError($data, $code = null)
     {
         if (in_array($this->upload['error'], array('TOO_LARGE', 'BAD_FORM','DEV_NO_DEF_FILE'))) {
             return true;

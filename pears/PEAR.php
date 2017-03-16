@@ -167,7 +167,11 @@ class PEAR
      * @access public
      * @return void
      */
-    function PEAR($error_class = null)
+    public function PEAR($error_class = null)
+    {
+        self::__construst($error_class = null);
+    }
+    public function __construst($error_class = null)
     {
         $classname = strtolower(get_class($this));
         if ($this->_debug) {
@@ -276,7 +280,7 @@ class PEAR
      * @access  public
      * @return  bool    true if parameter is an error
      */
-    function isError($data, $code = null)
+    static function isError($data, $code = null)
     {
         if (is_a($data, 'PEAR_Error')) {
             if (is_null($code)) {
