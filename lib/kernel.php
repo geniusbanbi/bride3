@@ -614,7 +614,68 @@ class Model{
     	//file_put_contents(DIRROOT.'sql_log.txt', $sql."\n", FILE_APPEND);
     	return Model::execute($sql);
     }
-    function updates( $fields , $identify='id' , $useTable='' , $register_fields=array() ){
+    function updates( $rows , $identify='id' , $useTable='' , $register_fields=array() )
+    {
+        if( count($rows) < 1 ){
+            // 如果沒有傳入值，直接當執行完畢處理
+            return true;
+        }
+        if( is_string($identify) ){
+            if( empty($identify) ){ errmsg('更新的對照欄位不能空白（以哪個欄位的內容為更新範圍）'); }
+            $identify=array($identify);
+        }
+        if( ! is_array($register_fields) ){
+            $register_fields=array();
+        }
+
+        //update條件參數是陣列的情況
+        if( is_array($identify) ){
+            $identifies_sql = array();
+            foreach($identify as $idf){
+                $identifies_sql[] = $idf.' = VALUES('.$idf.')';
+            }
+        }
+
+        $fs=array();
+        $fs_list=array();
+        $first=true;
+        foreach( $rows as $fields ){
+            
+            $vs=array();
+            foreach( $fields as $f=>$v ){
+                if( ! array_key_exists( $f , $register_fields ) ){
+                    continue;
+                }
+                if( $first ){
+                    $fs[] = "`".$f."`";
+                    $fs_list[] = $f;
+                }
+                
+                $field_type = $register_fields[ $f ];
+                $vs[]=Model::quote( $v, $field_type );
+            }
+            $first=false;
+            
+            $values[]='('.implode(',',$vs).')';
+        }
+        
+        if( count($fs) < 1 ){
+            self::_listFields( pos($rows) );
+            errmsg('沒有寫入的欄位，請檢查您的輸入，或是否尚未指定欄位註冊表 $register_fields');
+        }
+
+        $need_update_fields_sql = array();
+        foreach( $fs_list as $f ){
+            if( in_array($f, $identify) ){ continue; }
+            $need_update_fields_sql[] = $f.' = VALUES('.$f.')';
+        }
+        
+        $sql = sprintf("INSERT INTO ".$useTable." ( %s ) VALUES %s",implode(',',$fs),implode(',',$values));
+        $sql.= " ON DUPLICATE KEY UPDATE ".implode(", ", $need_update_fields_sql);
+
+        return Model::execute($sql);
+    }
+    /*function updates( $fields , $identify='id' , $useTable='' , $register_fields=array() ){
         $tmpTable = 'tmp_'.uniqid();
         //pr($fields);die;
         if( count($fields) < 1 ){
@@ -689,7 +750,7 @@ class Model{
             return true;
         }
         return false;
-    }
+    }*/
     function query($sql){
         self::_debugDryRun($sql);
         self::_debugShowQuery($sql);
